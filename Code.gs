@@ -12,7 +12,7 @@
 // ==============================================================================
 const CONFIG = {
   GYM_NAME: 'Phoenix Fitness Centre',
-  ADMIN_EMAIL: 'phoenixgym.vkp@gmail.com', // Pre-configured Admin Email
+  ADMIN_EMAIL: 'hariramkumar2030@gmail.com', // Pre-configured Target Email
   TEST_MODE: true,                            // Set to FALSE when going LIVE
   SHEET_NAME: 'Sheet1',
   TIMEZONE: 'Asia/Kolkata',
