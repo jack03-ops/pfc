@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Member from '../models/Member.js';
 import Notification from '../models/Notification.js';
 import { sendSMS } from './smsService.js';
@@ -24,6 +25,10 @@ const sendWhatsAppWithRetry = async (phone, message, maxRetries = 3) => {
 
 // Main task to run automated daily reminders
 export const runAutomatedReminders = async () => {
+  if (mongoose.connection.readyState !== 1) {
+    console.log('[Scheduler] Skipping reminder check (MongoDB not connected).');
+    return;
+  }
   console.log('[Scheduler] Executing scheduled membership expiry scanning...');
   try {
     const today = new Date();

@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
@@ -30,6 +31,10 @@ app.use(express.json());
 // Administrative and Plan seeding hooks
 const seedDatabase = async () => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      console.log('[Seeding] Skipping DB seeding (MongoDB not connected).');
+      return;
+    }
     // 1. Seed Admin credentials
     const adminExists = await Admin.findOne({ username: 'Phoenix03' });
     if (!adminExists) {
@@ -79,7 +84,7 @@ app.get('/health', (req, res) => {
 // Centralized error handler
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
   console.log(`[Phoenix Server] Telemetry active on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode.`);
