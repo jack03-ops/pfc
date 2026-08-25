@@ -61,6 +61,61 @@ const MemberSchema = new mongoose.Schema({
     enum: ['Paid', 'Pending'],
     default: 'Pending'
   },
+  dob: {
+    type: Date
+  },
+  height: {
+    type: Number,
+    default: null
+  },
+  weight: {
+    type: Number,
+    default: null
+  },
+  bmi: {
+    type: Number,
+    default: null
+  },
+  emergencyContact: {
+    type: String,
+    default: ''
+  },
+  email: {
+    type: String,
+    default: ''
+  },
+  purposeOfJoining: {
+    type: String,
+    enum: ['Gain Weight', 'Lose Weight', 'Fitness', 'Become Professional', 'Other'],
+    default: 'Fitness'
+  },
+  gymExperience: {
+    type: String,
+    enum: ['Yes', 'No'],
+    default: 'No'
+  },
+  profession: {
+    type: String,
+    default: ''
+  },
+  amountPaid: {
+    type: Number,
+    default: 0
+  },
+  hasMedicalCondition: {
+    type: String,
+    enum: ['Yes', 'No'],
+    default: 'No'
+  },
+  medicalConditionDetails: {
+    type: String,
+    default: ''
+  },
+  membershipType: {
+    type: String,
+    enum: ['New', 'Renewal'],
+    default: 'New'
+  },
   notes: {
     type: String,
     default: ''

@@ -1,21 +1,29 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Search, 
-  Filter, 
   Trash2, 
   Edit3, 
   Phone, 
   MapPin, 
   UserCheck, 
   UserX,
-  CreditCard,
-  Plus
+  Plus,
+  Eye,
+  X,
+  User,
+  Heart,
+  Dumbbell,
+  ShieldAlert,
+  Calendar,
+  Mail,
+  Briefcase
 } from 'lucide-react';
 
 export default function MembersList({ members, onDeleteMember, onToggleStatus, onEditMember, setPage }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchField, setSearchField] = useState('all'); // all, name, id, phone, village
   const [statusFilter, setStatusFilter] = useState('all'); // all, active, inactive, expiring, pending
+  const [viewingMember, setViewingMember] = useState(null);
 
   // Compute filtered members
   const filteredMembers = useMemo(() => {
@@ -135,10 +143,10 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
               <tr className="border-b border-zinc-900 bg-zinc-950/45 text-slate-400 text-[10px] uppercase font-black tracking-wider">
                 <th className="p-4 pl-6">Client ID</th>
                 <th className="p-4">Full Name</th>
-                <th className="p-4">Phone / WhatsApp</th>
+                <th className="p-4">Phone / Contact</th>
                 <th className="p-4">Village & Address</th>
-                <th className="p-4">Active Plan</th>
-                <th className="p-4">End Date</th>
+                <th className="p-4">Plan & Type</th>
+                <th className="p-4">Expiry Date</th>
                 <th className="p-4 text-center">Payment</th>
                 <th className="p-4 text-center">Status</th>
                 <th className="p-4 pr-6 text-right">Actions</th>
@@ -159,8 +167,15 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
 
                       {/* Name & Basic details */}
                       <td className="p-4">
-                        <div className="font-semibold text-white">{member.fullName}</div>
-                        <div className="text-[10px] text-slate-500 font-medium">Age: {member.age} • {member.gender}</div>
+                        <div className="font-semibold text-white flex items-center gap-1.5">
+                          {member.fullName}
+                          {member.hasMedicalCondition === 'Yes' && (
+                            <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" title="Medical Alert" />
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-medium">
+                          Age: {member.age} • {member.gender} {member.profession ? `• ${member.profession}` : ''}
+                        </div>
                       </td>
 
                       {/* Phone */}
@@ -169,8 +184,8 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                           <Phone className="w-3.5 h-3.5 text-slate-500" />
                           <span>{member.phone}</span>
                         </div>
-                        {member.whatsapp && (
-                          <div className="text-[9px] text-emerald-400 font-medium mt-0.5">WhatsApp Active</div>
+                        {member.emergencyContact && member.emergencyContact !== '+91 ' && (
+                          <div className="text-[9px] text-amber-400 font-medium mt-0.5">Emergency: {member.emergencyContact}</div>
                         )}
                       </td>
 
@@ -180,14 +195,21 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                           <MapPin className="w-3.5 h-3.5 text-red-500" />
                           {member.village}
                         </div>
-                        <div className="text-[10px] text-slate-500 truncate max-w-[150px] mt-0.5">{member.address}</div>
+                        <div className="text-[10px] text-slate-500 truncate max-w-[150px] mt-0.5">{member.address || 'N/A'}</div>
                       </td>
 
-                      {/* Plan */}
+                      {/* Plan & Type */}
                       <td className="p-4">
-                        <span className="px-2.5 py-1 bg-zinc-900 border border-slate-700/65 rounded-lg font-bold text-[10px] uppercase text-slate-300">
-                          {member.plan}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="px-2.5 py-1 bg-zinc-900 border border-slate-700/65 rounded-lg font-bold text-[10px] uppercase text-slate-300">
+                            {member.plan}
+                          </span>
+                          {member.membershipType && (
+                            <span className="px-1.5 py-0.5 bg-zinc-950 text-[9px] font-semibold text-slate-400 rounded border border-zinc-800">
+                              {member.membershipType}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* End Date */}
@@ -206,6 +228,9 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                         }`}>
                           {member.paymentStatus}
                         </span>
+                        {member.amountPaid && (
+                          <div className="text-[9px] text-slate-400 font-bold mt-0.5">₹{member.amountPaid}</div>
+                        )}
                       </td>
 
                       {/* Status Toggle Button */}
@@ -235,6 +260,15 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                       {/* Actions */}
                       <td className="p-4 pr-6 text-right">
                         <div className="inline-flex items-center gap-1.5">
+                          {/* View details button */}
+                          <button
+                            onClick={() => setViewingMember(member)}
+                            className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-zinc-900 rounded-lg transition-all cursor-pointer"
+                            title="View Full Enrollment Form"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+
                           {/* Edit button */}
                           <button
                             onClick={() => onEditMember(member)}
@@ -268,6 +302,119 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
           </table>
         </div>
       </div>
+
+      {/* View Enrollment Details Modal */}
+      {viewingMember && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6 shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-4">
+              <div>
+                <span className="text-[10px] font-extrabold text-red-500 uppercase tracking-widest">PHOENIX FITNESS CENTRE ENROLLMENT RECORD</span>
+                <h3 className="text-xl font-black text-white tracking-tight flex items-center gap-2 mt-0.5">
+                  {viewingMember.fullName}
+                  <span className="text-xs font-normal text-slate-400">({viewingMember.id})</span>
+                </h3>
+              </div>
+              <button
+                onClick={() => setViewingMember(null)}
+                className="p-2 text-slate-400 hover:text-white bg-zinc-900 rounded-xl transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content Sections */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              
+              {/* Section 1: Personal & Contact */}
+              <div className="p-4 bg-zinc-900/40 rounded-xl border border-zinc-900 space-y-2">
+                <div className="font-extrabold text-slate-300 uppercase tracking-wider text-[10px] flex items-center gap-1.5 mb-3 text-red-400">
+                  <User className="w-3.5 h-3.5" /> Personal Details
+                </div>
+                <div><span className="text-slate-500">Gender / Age:</span> <strong className="text-slate-200">{viewingMember.gender} • {viewingMember.age} yrs</strong></div>
+                <div><span className="text-slate-500">Date of Birth:</span> <strong className="text-slate-200">{viewingMember.dob || 'N/A'}</strong></div>
+                <div><span className="text-slate-500">Profession:</span> <strong className="text-slate-200">{viewingMember.profession || 'N/A'}</strong></div>
+                <div><span className="text-slate-500">Contact No:</span> <strong className="text-slate-200">{viewingMember.phone}</strong></div>
+                <div><span className="text-slate-500">Emergency Contact:</span> <strong className="text-amber-400">{viewingMember.emergencyContact || 'N/A'}</strong></div>
+                <div><span className="text-slate-500">Email:</span> <strong className="text-slate-200">{viewingMember.email || 'N/A'}</strong></div>
+                <div><span className="text-slate-500">Village / Town:</span> <strong className="text-slate-200">{viewingMember.village}</strong></div>
+                <div><span className="text-slate-500">Address:</span> <strong className="text-slate-200">{viewingMember.address || 'N/A'}</strong></div>
+              </div>
+
+              {/* Section 2: Health & Physical Metrics */}
+              <div className="p-4 bg-zinc-900/40 rounded-xl border border-zinc-900 space-y-2">
+                <div className="font-extrabold text-slate-300 uppercase tracking-wider text-[10px] flex items-center gap-1.5 mb-3 text-rose-400">
+                  <Heart className="w-3.5 h-3.5" /> Health & Physical Metrics
+                </div>
+                <div><span className="text-slate-500">Height:</span> <strong className="text-slate-200">{viewingMember.height ? `${viewingMember.height} cms` : 'N/A'}</strong></div>
+                <div><span className="text-slate-500">Weight:</span> <strong className="text-slate-200">{viewingMember.weight ? `${viewingMember.weight} Kgs` : 'N/A'}</strong></div>
+                <div><span className="text-slate-500">BMI:</span> <strong className="text-amber-400">{viewingMember.bmi || 'N/A'}</strong></div>
+                <div><span className="text-slate-500">Medical Condition / Allergic:</span> <strong className={viewingMember.hasMedicalCondition === 'Yes' ? 'text-rose-400 font-black' : 'text-slate-200'}>{viewingMember.hasMedicalCondition || 'No'}</strong></div>
+                {viewingMember.hasMedicalCondition === 'Yes' && (
+                  <div className="p-2 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-300 text-[11px] mt-1">
+                    <strong>Medical Explanation:</strong> {viewingMember.medicalConditionDetails || 'Not specified'}
+                  </div>
+                )}
+              </div>
+
+              {/* Section 3: Gym & Subscription Details */}
+              <div className="md:col-span-2 p-4 bg-zinc-900/40 rounded-xl border border-zinc-900 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="font-extrabold text-slate-300 uppercase tracking-wider text-[10px] flex items-center gap-1.5 mb-3 text-amber-400">
+                    <Dumbbell className="w-3.5 h-3.5" /> Gym Enrollment Info
+                  </div>
+                  <div><span className="text-slate-500">Purpose of Joining:</span> <strong className="text-slate-200">{viewingMember.purposeOfJoining || 'Fitness'}</strong></div>
+                  <div><span className="text-slate-500">Gym Experience:</span> <strong className="text-slate-200">{viewingMember.gymExperience || 'No'}</strong></div>
+                  <div><span className="text-slate-500">Membership Type:</span> <strong className="text-slate-200">{viewingMember.membershipType || 'New'}</strong></div>
+                  <div><span className="text-slate-500">Joining Date:</span> <strong className="text-slate-200">{viewingMember.joiningDate}</strong></div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="font-extrabold text-slate-300 uppercase tracking-wider text-[10px] flex items-center gap-1.5 mb-3 text-emerald-400">
+                    <Calendar className="w-3.5 h-3.5" /> Subscription & Financials
+                  </div>
+                  <div><span className="text-slate-500">Plan:</span> <strong className="text-slate-200">{viewingMember.plan}</strong></div>
+                  <div><span className="text-slate-500">Amount Paid:</span> <strong className="text-emerald-400 font-bold">₹{viewingMember.amountPaid || '1000'}</strong></div>
+                  <div><span className="text-slate-500">Start Date:</span> <strong className="text-slate-200">{viewingMember.startDate}</strong></div>
+                  <div><span className="text-slate-500">Expiry Date:</span> <strong className="text-slate-200">{viewingMember.endDate}</strong></div>
+                  <div><span className="text-slate-500">Payment Status:</span> <strong className={viewingMember.paymentStatus === 'Paid' ? 'text-emerald-400' : 'text-rose-400'}>{viewingMember.paymentStatus}</strong></div>
+                </div>
+              </div>
+
+              {/* Section 4: Notes */}
+              {viewingMember.notes && (
+                <div className="md:col-span-2 p-3 bg-zinc-900/60 rounded-xl border border-zinc-900">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Personal Fitness Notes</span>
+                  <p className="text-slate-300 text-xs italic">{viewingMember.notes}</p>
+                </div>
+              )}
+
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex justify-between items-center border-t border-zinc-900 pt-4">
+              <button
+                onClick={() => {
+                  const m = viewingMember;
+                  setViewingMember(null);
+                  onEditMember(m);
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Edit3 className="w-4 h-4" /> Edit Profile
+              </button>
+              <button
+                onClick={() => setViewingMember(null)}
+                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-slate-300 font-bold rounded-xl transition-all cursor-pointer"
+              >
+                Close Window
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
