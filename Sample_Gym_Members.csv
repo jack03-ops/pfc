@@ -1,0 +1,8 @@
+Client Name,Email,Membership Start Date,Membership Expiry Date,Membership Status,7-Day Reminder Sent,3-Day Reminder Sent,1-Day Reminder Sent,Expiry Reminder Sent,Last Email Sent,Last Email Type,Error/Status
+Rahul Sharma,rahul.sharma@example.com,2026-08-01,2026-09-01,Active,FALSE,FALSE,FALSE,FALSE,,,Ready
+Karthik Kumar,karthik.k@gmail.com,2026-07-28,2026-08-28,Active,FALSE,FALSE,FALSE,FALSE,,,Ready
+Suresh Raina,suresh.raina@yahoo.com,2026-07-30,2026-08-30,Active,FALSE,FALSE,FALSE,FALSE,,,Ready
+Dhanush Raj,dhanush.raj@gmail.com,2026-08-02,2026-09-02,Active,FALSE,FALSE,FALSE,FALSE,,,Ready
+Neha Verma,neha.verma@outlook.com,2026-07-15,2026-08-15,Expired,TRUE,TRUE,TRUE,TRUE,2026-08-15 08:00:00,Expiry Email,SUCCESS
+Rajesh Kumar,rajesh.kumar@corp.com,2026-03-05,2026-09-05,Active,FALSE,FALSE,FALSE,FALSE,,,Ready
+Simran Kaur,simran.kaur@gmail.com,2026-08-01,2026-09-01,Active,FALSE,FALSE,FALSE,FALSE,,,Ready
