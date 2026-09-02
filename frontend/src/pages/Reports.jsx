@@ -63,7 +63,7 @@ export default function Reports({ members, payments }) {
   }, [members, payments, cycleTimeframe]);
 
   return (
-    <div className="p-8 space-y-8 overflow-y-auto max-h-[calc(100vh-80px)]">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 overflow-y-auto max-h-[calc(100vh-60px)] md:max-h-[calc(100vh-80px)]">
       {/* Timeframe selector header row */}
       <div className="flex justify-end border-b border-zinc-900 pb-5">
         <TimeframeSelector selectedId={cycleTimeframe} onChange={setCycleTimeframe} />

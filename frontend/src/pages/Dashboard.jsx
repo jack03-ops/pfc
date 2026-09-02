@@ -154,7 +154,7 @@ export default function Dashboard({ members, payments, setPage }) {
   };
 
   return (
-    <div className="w-full max-w-full p-8 space-y-8 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-80px)] bg-[#030303]">
+    <div className="w-full max-w-full p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-60px)] md:max-h-[calc(100vh-80px)] bg-[#030303]">
       {/* Real-time Dashboard Statistics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
