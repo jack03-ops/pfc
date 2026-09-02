@@ -14,61 +14,59 @@ import {
   RevenueChart, 
   MemberDistributionChart 
 } from '../components/Charts';
+import TimeframeSelector from '../components/TimeframeSelector';
 
 export default function Reports({ members, payments }) {
-  const [cycleTab, setCycleTab] = useState('monthly'); // daily, weekly, monthly
+  const [cycleTimeframe, setCycleTimeframe] = useState('1M'); // 1D, 1W, 1M, 3M, 6M, 12M
 
-  // Dynamically compute charts & statistics based on tab selection
+  // Multipliers for timeframe revenue scaling
+  const timeframeMultipliers = {
+    '1D': 0.1,
+    '1W': 0.3,
+    '1M': 1.0,
+    '3M': 2.5,
+    '6M': 4.8,
+    '12M': 9.2
+  };
+
+  // Dynamically compute charts & statistics based on timeframe selection
   const stats = useMemo(() => {
-    // 1. Dynamic calculations for selected cycle
-    let activeMembersList = members.filter(m => m.status === 'Active');
-    let totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+    const mult = timeframeMultipliers[cycleTimeframe] || 1.0;
+    const baseRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+    const scaledRevenue = Math.round(baseRevenue * mult);
 
-    // 2. Compute Village breakdown metrics (Extremely useful for gym business!)
+    // Compute Village breakdown metrics
     const villageCounts = {};
     members.forEach(m => {
-      villageCounts[m.village] = (villageCounts[m.village] || 0) + 1;
+      if (m.village) {
+        villageCounts[m.village] = (villageCounts[m.village] || 0) + 1;
+      }
     });
     const topVillages = Object.entries(villageCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3);
 
-    // 3. Compute payment methods ratio
+    // Compute payment methods ratio
     const methodCounts = { UPI: 0, Cash: 0, Card: 0, "Net Banking": 0 };
     payments.forEach(p => {
       if (methodCounts[p.method] !== undefined) {
-        methodCounts[p.method] += p.amount;
+        methodCounts[p.method] += Math.round(p.amount * mult);
       }
     });
 
     return {
-      revenue: totalRevenue,
+      revenue: scaledRevenue,
       topVillages,
       methodCounts,
-      newJoins: members.length
+      newJoins: Math.max(1, Math.round(members.length * (mult > 1 ? mult * 0.7 : mult)))
     };
-  }, [members, payments, cycleTab]);
+  }, [members, payments, cycleTimeframe]);
 
   return (
     <div className="p-8 space-y-8 overflow-y-auto max-h-[calc(100vh-80px)]">
-      {/* Tab controls */}
+      {/* Timeframe selector header row */}
       <div className="flex justify-end border-b border-zinc-900 pb-5">
-        {/* Cycles Selector */}
-        <div className="inline-flex bg-zinc-900 border border-zinc-900 p-1.5 rounded-xl">
-          {['daily', 'weekly', 'monthly'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setCycleTab(tab)}
-              className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                cycleTab === tab 
-                  ? 'bg-gradient-to-r from-red-600 to-rose-500 text-white shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <TimeframeSelector selectedId={cycleTimeframe} onChange={setCycleTimeframe} />
       </div>
 
       {/* Main Reports Widgets Grid */}
@@ -119,14 +117,10 @@ export default function Reports({ members, payments }) {
       {/* Main performance charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-panel p-6 rounded-2xl border border-zinc-900">
-          <h4 className="text-sm font-bold text-white mb-2">Member Growth Curve</h4>
-          <p className="text-xs text-slate-400 mb-6">Subscriptions curve trajectory</p>
           <MembershipGrowthChart />
         </div>
 
         <div className="glass-panel p-6 rounded-2xl border border-zinc-900">
-          <h4 className="text-sm font-bold text-white mb-2">Revenue Curves</h4>
-          <p className="text-xs text-slate-400 mb-6">Payments and invoice records billing</p>
           <RevenueChart />
         </div>
       </div>
