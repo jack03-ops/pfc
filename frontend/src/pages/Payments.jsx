@@ -10,11 +10,13 @@ import {
   Receipt 
 } from 'lucide-react';
 import { getSettings } from '../db/mockDb';
+import ReceiptModal from '../components/ReceiptModal';
 
 export default function Payments({ members, payments, onAddPayment, onMarkAsPaid }) {
   const settings = getSettings();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [newPayment, setNewPayment] = useState({
     clientId: '',
     amount: '',
@@ -116,7 +118,7 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
           <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Record Operations</h4>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Manual Billing Receipt
@@ -144,7 +146,7 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
                   }));
                 }}
                 required
-                className="w-full px-3 py-2 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-cyan-500"
+                className="w-full px-3 py-2 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500"
               >
                 <option value="">-- Choose Member --</option>
                 {members.map(m => (
@@ -160,7 +162,7 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
                 value={newPayment.amount}
                 onChange={(e) => setNewPayment(prev => ({ ...prev, amount: e.target.value }))}
                 required
-                className="w-full px-3 py-2 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-cyan-500"
+                className="w-full px-3 py-2 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500"
                 placeholder="2700"
               />
             </div>
@@ -170,7 +172,7 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
               <select
                 value={newPayment.method}
                 onChange={(e) => setNewPayment(prev => ({ ...prev, method: e.target.value }))}
-                className="w-full px-3 py-2 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-cyan-500"
+                className="w-full px-3 py-2 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500"
               >
                 <option value="UPI">UPI (PhonePe/GPay)</option>
                 <option value="Cash">Cash Handover</option>
@@ -183,13 +185,13 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}
-                className="w-1/2 py-2 bg-zinc-900 border border-zinc-900 text-slate-400 text-xs font-semibold rounded-xl"
+                className="w-1/2 py-2 bg-zinc-900 border border-zinc-900 text-slate-400 text-xs font-semibold rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="w-1/2 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-xl shadow-md cursor-pointer"
+                className="w-1/2 py-2 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-semibold rounded-xl shadow-md cursor-pointer"
               >
                 Register Bill
               </button>
@@ -236,7 +238,7 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
         <div className="glass-panel p-6 rounded-2xl border border-zinc-900 lg:col-span-2">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3.5 mb-6">
             <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-cyan-400" />
+              <Receipt className="w-4 h-4 text-red-500" />
               Receipt Ledgers
             </h4>
             
@@ -248,7 +250,7 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
                 placeholder="Search transactions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-[11px] text-white focus:outline-none focus:border-cyan-500"
+                className="w-full pl-8 pr-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-[11px] text-white focus:outline-none focus:border-red-500"
               />
             </div>
           </div>
@@ -257,7 +259,8 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-zinc-900 bg-zinc-950/45 text-slate-500 text-[9px] uppercase font-black tracking-wider">
-                  <th className="p-3 pl-4">Receipt ID</th>
+                  <th className="p-3 pl-4">INVOICE</th>
+                  <th className="p-3">Receipt ID</th>
                   <th className="p-3">Client</th>
                   <th className="p-3 text-center">Plan</th>
                   <th className="p-3 text-center">Method</th>
@@ -269,7 +272,16 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
                 {filteredPayments.length > 0 ? (
                   filteredPayments.map((p) => (
                     <tr key={p.id} className="hover:bg-zinc-900/20">
-                      <td className="p-3 pl-4 font-bold text-slate-400">{p.id}</td>
+                      <td className="p-3 pl-4 text-center">
+                        <button
+                          onClick={() => setSelectedReceipt(p)}
+                          className="p-2 text-red-500 hover:text-white bg-red-500/10 hover:bg-red-600 rounded-xl transition-all cursor-pointer border border-red-500/20 shadow-sm inline-flex items-center justify-center group"
+                          title="View & Print Official PDF Receipt"
+                        >
+                          <Receipt className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        </button>
+                      </td>
+                      <td className="p-3 font-bold text-slate-400">{p.id}</td>
                       <td className="p-3">
                         <div className="font-semibold text-white">{p.clientName}</div>
                         <div className="text-[9px] text-slate-500 font-semibold">{p.clientId}</div>
@@ -279,14 +291,14 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
                           {p.plan}
                         </span>
                       </td>
-                      <td className="p-3 text-center font-bold text-cyan-400">{p.method}</td>
+                      <td className="p-3 text-center font-bold text-emerald-400">{p.method}</td>
                       <td className="p-3 text-center font-extrabold text-white">₹{p.amount}</td>
                       <td className="p-3 pr-4 text-right text-slate-500 font-semibold">{p.date}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="p-8 text-center text-slate-500">
+                    <td colSpan="7" className="p-8 text-center text-slate-500">
                       No payment receipts logged yet.
                     </td>
                   </tr>
@@ -296,6 +308,15 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
           </div>
         </div>
       </div>
+
+      {/* Official Tax Invoice & PDF Printable Modal */}
+      {selectedReceipt && (
+        <ReceiptModal 
+          receipt={selectedReceipt} 
+          member={members.find(m => m.id === selectedReceipt.clientId)} 
+          onClose={() => setSelectedReceipt(null)} 
+        />
+      )}
     </div>
   );
 }
