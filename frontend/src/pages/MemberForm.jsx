@@ -190,16 +190,7 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
   return (
     <div className="p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-80px)]">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-red-500" />
-            {isEditMode ? `Edit Member Profile: ${formData.id}` : 'Phoenix Fitness Centre Enrollment Form'}
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            {isEditMode ? 'Modify active subscription parameters or personal fitness details.' : 'Complete full physical enrollment form to register a new gym member.'}
-          </p>
-        </div>
+      <div className="flex justify-end">
         <button
           onClick={onCancel}
           className="p-2 text-slate-400 hover:text-slate-200 bg-zinc-900 border border-zinc-900 rounded-xl transition-all cursor-pointer"
