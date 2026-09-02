@@ -1,286 +1,247 @@
 /**
  * ==============================================================================
- * PHOENIX FITNESS CENTRE - AUTOMATED MEMBERSHIP EMAIL REMINDER SYSTEM
+ * PHOENIX FITNESS CENTRE - DUAL AUTOMATED EMAIL + WHATSAPP REMINDER SYSTEM
  * ==============================================================================
- * Stack: Google Sheets + Google Apps Script + Gmail
- * Admin Email: phoenixgym.vkp@gmail.com
+ * Stack: Google Sheets + Google Apps Script + Gmail + WhatsApp API
+ * Target Admin Email: hariramkumar2030@gmail.com
  * Timezone: Asia/Kolkata (IST)
  */
 
 // ==============================================================================
-// CONFIGURATION SETTINGS
+// CONFIGURATION
 // ==============================================================================
 const CONFIG = {
   GYM_NAME: 'Phoenix Fitness Centre',
-  ADMIN_EMAIL: 'hariramkumar2030@gmail.com', // Pre-configured Target Email
+  ADMIN_EMAIL: 'hariramkumar2030@gmail.com', // Target Email in TEST_MODE
   TEST_MODE: true,                            // Set to FALSE when going LIVE
+  ENABLE_EMAIL: true,                         // Enable/Disable Gmail Email Reminders
+  ENABLE_WHATSAPP: true,                      // Enable/Disable WhatsApp Reminders
   SHEET_NAME: 'Sheet1',
   TIMEZONE: 'Asia/Kolkata',
-  DEFAULT_SENDER_NAME: 'Phoenix Fitness Centre Team'
+
+  // WHATSAPP API CONFIGURATION (UltraMsg / Instance Gateway Example)
+  WHATSAPP_API: {
+    INSTANCE_ID: 'instance12345',
+    TOKEN: 'your_ultramsg_token_here',
+    ENDPOINT: 'https://api.ultramsg.com/instance12345/messages/chat'
+  }
 };
 
-// Column Index Mappings (1-indexed for Sheet APIs)
+// Column Mappings (1-indexed for Sheet APIs)
 const COL = {
   CLIENT_NAME: 1,
   EMAIL: 2,
-  START_DATE: 3,
-  EXPIRY_DATE: 4,
-  STATUS: 5,
-  REMINDER_7DAY: 6,
-  REMINDER_3DAY: 7,
-  REMINDER_1DAY: 8,
-  REMINDER_EXPIRY: 9,
-  LAST_SENT_DATE: 10,
-  LAST_SENT_TYPE: 11,
-  ERROR_STATUS: 12
+  PHONE: 3,
+  START_DATE: 4,
+  EXPIRY_DATE: 5,
+  STATUS: 6,
+  REMINDER_7DAY: 7,
+  REMINDER_3DAY: 8,
+  REMINDER_1DAY: 9,
+  REMINDER_EXPIRY: 10,
+  LAST_SENT_TIME: 11,
+  LAST_SENT_CHANNEL: 12,
+  LOG_STATUS: 13
 };
 
 // ==============================================================================
-// MAIN AUTOMATION ENGINE
+// MAIN DUAL AUTOMATION ENGINE
 // ==============================================================================
-/**
- * Main function called daily by time-driven trigger.
- * Scans all rows, evaluates expiry dates, and dispatches reminders.
- */
-function sendMembershipReminders() {
+function runDualReminders() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEET_NAME);
   if (!sheet) {
-    Logger.log('ERROR: Sheet with name "' + CONFIG.SHEET_NAME + '" not found.');
+    Logger.log('ERROR: Sheet "' + CONFIG.SHEET_NAME + '" not found.');
     return;
   }
 
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) {
-    Logger.log('No client records found to process.');
+    Logger.log('No records found.');
     return;
   }
 
-  // Fetch all client data (Rows 2 to End, Columns 1 to 12)
-  const range = sheet.getRange(2, 1, lastRow - 1, 12);
-  const values = range.getValues();
+  const values = sheet.getRange(2, 1, lastRow - 1, 13).getValues();
   const today = getNormalizedToday();
 
-  let totalProcessed = 0;
-  let emailsSent = 0;
-  let errorsCount = 0;
+  let processed = 0, emailsSent = 0, waSent = 0, errors = 0;
 
-  Logger.log('--- STARTING REMINDER EXECUTION ---');
-  Logger.log('Today Date (IST): ' + formatDate(today));
-  Logger.log('TEST_MODE Active: ' + CONFIG.TEST_MODE);
+  Logger.log('=== STARTING DUAL REMINDER DISPATCH (IST) ===');
+  Logger.log('Today: ' + formatDate(today) + ' | TEST_MODE: ' + CONFIG.TEST_MODE);
 
   for (let i = 0; i < values.length; i++) {
-    const rowIndex = i + 2; // Actual row number in Google Sheet
+    const rowIndex = i + 2;
     const row = values[i];
 
-    const clientName = String(row[COL.CLIENT_NAME - 1]).trim();
+    const name = String(row[COL.CLIENT_NAME - 1]).trim();
     const email = String(row[COL.EMAIL - 1]).trim();
+    const phone = cleanPhone(String(row[COL.PHONE - 1]));
     const expiryRaw = row[COL.EXPIRY_DATE - 1];
-    const status = String(row[COL.STATUS - 1]).trim();
 
-    // 1. Skip completely blank rows
-    if (!clientName && !email && !expiryRaw) {
-      continue;
-    }
+    if (!name && !email && !expiryRaw) continue;
+    processed++;
 
-    totalProcessed++;
-
-    // 2. Validate Email Address
-    if (!validateEmail(email)) {
-      sheet.getRange(rowIndex, COL.ERROR_STATUS).setValue('ERROR: Invalid Email (' + email + ')');
-      errorsCount++;
-      continue;
-    }
-
-    // 3. Validate Expiry Date
     const expiryDate = parseDate(expiryRaw);
     if (!expiryDate) {
-      sheet.getRange(rowIndex, COL.ERROR_STATUS).setValue('ERROR: Invalid Date Format');
-      errorsCount++;
+      sheet.getRange(rowIndex, COL.LOG_STATUS).setValue('ERROR: Invalid Date Format');
+      errors++;
       continue;
     }
 
-    // 4. Calculate Days Remaining until Expiry
-    const daysRemaining = calculateDaysDifference(today, expiryDate);
-
-    // 5. Determine required reminder type
-    const reminderType = getReminderType(daysRemaining, row);
+    const daysLeft = calculateDaysDifference(today, expiryDate);
+    const reminderType = getReminderType(daysLeft, row);
 
     if (!reminderType) {
-      // No email needed for today
-      sheet.getRange(rowIndex, COL.ERROR_STATUS).setValue('OK: No Action Needed (' + daysRemaining + ' days left)');
+      sheet.getRange(rowIndex, COL.LOG_STATUS).setValue('OK: No Action Needed (' + daysLeft + ' days left)');
       continue;
     }
 
-    // 6. Target Email Destination
+    let emailStatus = 'Disabled', waStatus = 'Disabled';
     const recipientEmail = CONFIG.TEST_MODE ? CONFIG.ADMIN_EMAIL : email;
 
-    // 7. Generate Template & Send Email
-    try {
-      const emailContent = generateEmailTemplate(reminderType, clientName, expiryDate);
-      
-      sendReminderEmail(recipientEmail, emailContent.subject, emailContent.htmlBody, clientName);
-
-      // 8. Update Sheet tracking flags
-      updateSheetAfterSend(sheet, rowIndex, reminderType, daysRemaining);
-      emailsSent++;
-      Logger.log('SUCCESS: Sent ' + reminderType + ' to ' + recipientEmail + ' (Client: ' + clientName + ')');
-
-    } catch (err) {
-      const errorMsg = 'ERROR Sending: ' + err.toString();
-      sheet.getRange(rowIndex, COL.ERROR_STATUS).setValue(errorMsg);
-      Logger.log('FAILED row ' + rowIndex + ': ' + errorMsg);
-      errorsCount++;
+    // 1. Dispatch Gmail Email Reminder
+    if (CONFIG.ENABLE_EMAIL && validateEmail(email)) {
+      try {
+        const mailObj = generateEmailTemplate(reminderType, name, expiryDate);
+        sendGmail(recipientEmail, mailObj.subject, mailObj.htmlBody);
+        emailStatus = 'Sent';
+        emailsSent++;
+      } catch (err) {
+        emailStatus = 'Failed: ' + err.toString();
+        errors++;
+      }
     }
+
+    // 2. Dispatch WhatsApp Reminder
+    if (CONFIG.ENABLE_WHATSAPP && phone) {
+      try {
+        const waMsg = generateWhatsAppText(reminderType, name, expiryDate);
+        sendWhatsApp(phone, waMsg);
+        waStatus = 'Sent';
+        waSent++;
+      } catch (err) {
+        waStatus = 'Failed: ' + err.toString();
+        errors++;
+      }
+    }
+
+    // 3. Update Sheet tracking flags & timestamp
+    updateSheetFlags(sheet, rowIndex, reminderType, emailStatus, waStatus);
+    Logger.log('SUCCESS Row ' + rowIndex + ' (' + name + '): Email=' + emailStatus + ' | WA=' + waStatus);
   }
 
-  Logger.log('--- EXECUTION SUMMARY ---');
-  Logger.log('Total Processed: ' + totalProcessed);
-  Logger.log('Emails Sent: ' + emailsSent);
-  Logger.log('Errors/Warnings: ' + errorsCount);
+  Logger.log('=== SUMMARY: Processed=' + processed + ' | Emails=' + emailsSent + ' | WhatsApp=' + waSent + ' | Errors=' + errors + ' ===');
 }
 
 // ==============================================================================
-// BUSINESS LOGIC & DUPLICATE PREVENTION
+// REMINDER RULES & DUPLICATE PREVENTION
 // ==============================================================================
-/**
- * Evaluates days remaining and row flags to prevent duplicate emails.
- */
-function getReminderType(daysRemaining, row) {
-  const sent7Day = row[COL.REMINDER_7DAY - 1] === true || String(row[COL.REMINDER_7DAY - 1]).toUpperCase() === 'TRUE';
-  const sent3Day = row[COL.REMINDER_3DAY - 1] === true || String(row[COL.REMINDER_3DAY - 1]).toUpperCase() === 'TRUE';
-  const sent1Day = row[COL.REMINDER_1DAY - 1] === true || String(row[COL.REMINDER_1DAY - 1]).toUpperCase() === 'TRUE';
-  const sentExpiry = row[COL.REMINDER_EXPIRY - 1] === true || String(row[COL.REMINDER_EXPIRY - 1]).toUpperCase() === 'TRUE';
+function getReminderType(daysLeft, row) {
+  const sent7 = isTrue(row[COL.REMINDER_7DAY - 1]);
+  const sent3 = isTrue(row[COL.REMINDER_3DAY - 1]);
+  const sent1 = isTrue(row[COL.REMINDER_1DAY - 1]);
+  const sentExp = isTrue(row[COL.REMINDER_EXPIRY - 1]);
 
-  // 7 Days Remaining Rule
-  if (daysRemaining === 7 && !sent7Day) {
-    return '7-Day Reminder';
-  }
-
-  // 3 Days Remaining Rule
-  if (daysRemaining === 3 && !sent3Day) {
-    return '3-Day Reminder';
-  }
-
-  // 1 Day Remaining Rule
-  if (daysRemaining === 1 && !sent1Day) {
-    return '1-Day Reminder';
-  }
-
-  // Expiry Day Rule (0 Days remaining or overdue)
-  if (daysRemaining <= 0 && !sentExpiry) {
-    return 'Expiry Email';
-  }
-
+  if (daysLeft === 7 && !sent7) return '7-Day Reminder';
+  if (daysLeft === 3 && !sent3) return '3-Day Reminder';
+  if (daysLeft === 1 && !sent1) return '1-Day Reminder';
+  if (daysLeft <= 0 && !sentExp) return 'Expiry Email';
   return null;
 }
 
-/**
- * Updates tracking flags in Sheet to prevent re-sending on repeated daily executions.
- */
-function updateSheetAfterSend(sheet, rowIndex, reminderType, daysRemaining) {
+function updateSheetFlags(sheet, rowIndex, reminderType, emailStatus, waStatus) {
   const timestamp = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
 
-  if (reminderType === '7-Day Reminder') {
-    sheet.getRange(rowIndex, COL.REMINDER_7DAY).setValue(true);
-  } else if (reminderType === '3-Day Reminder') {
-    sheet.getRange(rowIndex, COL.REMINDER_3DAY).setValue(true);
-  } else if (reminderType === '1-Day Reminder') {
-    sheet.getRange(rowIndex, COL.REMINDER_1DAY).setValue(true);
-  } else if (reminderType === 'Expiry Email') {
+  if (reminderType === '7-Day Reminder') sheet.getRange(rowIndex, COL.REMINDER_7DAY).setValue(true);
+  else if (reminderType === '3-Day Reminder') sheet.getRange(rowIndex, COL.REMINDER_3DAY).setValue(true);
+  else if (reminderType === '1-Day Reminder') sheet.getRange(rowIndex, COL.REMINDER_1DAY).setValue(true);
+  else if (reminderType === 'Expiry Email') {
     sheet.getRange(rowIndex, COL.REMINDER_EXPIRY).setValue(true);
     sheet.getRange(rowIndex, COL.STATUS).setValue('Expired');
   }
 
-  sheet.getRange(rowIndex, COL.LAST_SENT_DATE).setValue(timestamp);
-  sheet.getRange(rowIndex, COL.LAST_SENT_TYPE).setValue(reminderType);
-  sheet.getRange(rowIndex, COL.ERROR_STATUS).setValue('SUCCESS: Sent ' + reminderType + ' (' + timestamp + ')');
+  const channelText = 'Email (' + emailStatus + ') + WhatsApp (' + waStatus + ')';
+  sheet.getRange(rowIndex, COL.LAST_SENT_TIME).setValue(timestamp);
+  sheet.getRange(rowIndex, COL.LAST_SENT_CHANNEL).setValue(channelText);
+  sheet.getRange(rowIndex, COL.LOG_STATUS).setValue('SUCCESS: ' + reminderType + ' (' + timestamp + ')');
 }
 
 // ==============================================================================
-// GMAIL EMAIL DISPATCH
+// GMAIL & WHATSAPP SENDERS
 // ==============================================================================
-/**
- * Sends HTML Email via GmailApp service.
- */
-function sendReminderEmail(toEmail, subject, htmlBody, clientName) {
-  GmailApp.sendEmail(toEmail, subject, 'Please view this email in an HTML-compatible client.', {
+function sendGmail(toEmail, subject, htmlBody) {
+  GmailApp.sendEmail(toEmail, subject, 'Please view in an HTML email client.', {
     htmlBody: htmlBody,
-    name: CONFIG.DEFAULT_SENDER_NAME
+    name: CONFIG.GYM_NAME
   });
 }
 
-// ==============================================================================
-// EMAIL TEMPLATES GENERATOR
-// ==============================================================================
-function generateEmailTemplate(reminderType, clientName, expiryDate) {
-  const formattedExpiry = formatDate(expiryDate);
-  let subject = '';
-  let bodyContent = '';
+function sendWhatsApp(phone, textMessage) {
+  if (CONFIG.WHATSAPP_API.TOKEN === 'your_ultramsg_token_here') {
+    Logger.log('[WhatsApp Simulation Mode] Message to ' + phone + ': ' + textMessage);
+    return;
+  }
 
-  const headerBg = '#dc2626'; // Phoenix Red
+  const payload = {
+    token: CONFIG.WHATSAPP_API.TOKEN,
+    to: phone,
+    body: textMessage
+  };
+
+  const options = {
+    method: 'post',
+    contentType: 'application/x-www-form-urlencoded',
+    payload: payload,
+    muteHttpExceptions: true
+  };
+
+  const response = UrlFetchApp.fetch(CONFIG.WHATSAPP_API.ENDPOINT, options);
+  Logger.log('[WhatsApp API Response] ' + response.getContentText());
+}
+
+// ==============================================================================
+// MESSAGING TEMPLATES
+// ==============================================================================
+function generateWhatsAppText(reminderType, name, expiryDate) {
+  const dateStr = formatDate(expiryDate);
+  if (reminderType === '7-Day Reminder') {
+    return `🏋️ *${CONFIG.GYM_NAME}*\n\nHi *${name}*,\nYour gym membership expires in *7 days* on *${dateStr}*.\n\nPlease visit the reception to renew your plan and keep training! 💪`;
+  } else if (reminderType === '3-Day Reminder') {
+    return `⚠️ *${CONFIG.GYM_NAME}*\n\nHi *${name}*,\nYour membership expires in *3 days* (*${dateStr}*).\n\nDon't break your fitness streak! Renew today at the desk. 🏃‍♂️`;
+  } else if (reminderType === '1-Day Reminder') {
+    return `🚨 *FINAL NOTICE - ${CONFIG.GYM_NAME}*\n\nHi *${name}*,\nYour membership expires *TOMORROW (${dateStr})*.\n\nRenew now to avoid access card lockout! 🔑`;
+  } else {
+    return `🔴 *MEMBERSHIP EXPIRED - ${CONFIG.GYM_NAME}*\n\nHi *${name}*,\nYour membership expired on *${dateStr}*.\n\nWe miss you! Reply to this message to pick your renewal plan. 🔥`;
+  }
+}
+
+function generateEmailTemplate(reminderType, name, expiryDate) {
+  const formattedExpiry = formatDate(expiryDate);
+  let subject = '', content = '';
 
   if (reminderType === '7-Day Reminder') {
-    subject = '⏰ 7 Days Left on Your ' + CONFIG.GYM_NAME + ' Membership';
-    bodyContent = `
-      <p style="font-size: 16px; color: #333333;">Hi <strong>${clientName}</strong>,</p>
-      <p style="font-size: 15px; color: #555555; line-height: 1.6;">
-        We hope you are having an amazing workout week! This is a friendly reminder that your gym membership at 
-        <strong>${CONFIG.GYM_NAME}</strong> is set to expire in <strong>7 days</strong> on <strong>${formattedExpiry}</strong>.
-      </p>
-      <p style="font-size: 15px; color: #555555; line-height: 1.6;">
-        To ensure uninterrupted access to your fitness sessions, equipment, and personal training slots, please stop by the front desk or renew your membership online.
-      </p>
-    `;
+    subject = '⏰ 7 Days Left on Your Phoenix Gym Membership';
+    content = `<p>Hi <strong>${name}</strong>,</p><p>Your gym membership at <strong>${CONFIG.GYM_NAME}</strong> expires in <strong>7 days</strong> on <strong>${formattedExpiry}</strong>. Please renew at the reception desk to keep your workout slot!</p>`;
   } else if (reminderType === '3-Day Reminder') {
-    subject = '⚠️ 3 Days Remaining! Renew Your ' + CONFIG.GYM_NAME + ' Membership';
-    bodyContent = `
-      <p style="font-size: 16px; color: #333333;">Hi <strong>${clientName}</strong>,</p>
-      <p style="font-size: 15px; color: #555555; line-height: 1.6;">
-        Your membership at <strong>${CONFIG.GYM_NAME}</strong> will expire in just <strong>3 days</strong> on <strong>${formattedExpiry}</strong>.
-      </p>
-      <p style="font-size: 15px; color: #555555; line-height: 1.6;">
-        Don't break your fitness streak! Renew your plan today to keep crushing your goals with us.
-      </p>
-    `;
+    subject = '⚠️ 3 Days Remaining! Renew Your Phoenix Gym Membership';
+    content = `<p>Hi <strong>${name}</strong>,</p><p>Your membership expires in <strong>3 days</strong> on <strong>${formattedExpiry}</strong>. Don't break your fitness streak!</p>`;
   } else if (reminderType === '1-Day Reminder') {
     subject = '🚨 Final Notice: Your Membership Expires Tomorrow!';
-    bodyContent = `
-      <p style="font-size: 16px; color: #333333;">Hi <strong>${clientName}</strong>,</p>
-      <p style="font-size: 15px; color: #555555; line-height: 1.6;">
-        Your membership at <strong>${CONFIG.GYM_NAME}</strong> expires <strong>tomorrow (${formattedExpiry})</strong>.
-      </p>
-      <p style="font-size: 15px; color: #555555; line-height: 1.6;">
-        Please renew today so your gym access card remains active without pause.
-      </p>
-    `;
-  } else if (reminderType === 'Expiry Email') {
-    subject = '🔴 Your ' + CONFIG.GYM_NAME + ' Membership Has Expired';
-    bodyContent = `
-      <p style="font-size: 16px; color: #333333;">Hi <strong>${clientName}</strong>,</p>
-      <p style="font-size: 15px; color: #555555; line-height: 1.6;">
-        Your membership at <strong>${CONFIG.GYM_NAME}</strong> has officially expired on <strong>${formattedExpiry}</strong>.
-      </p>
-      <p style="font-size: 15px; color: #555555; line-height: 1.6;">
-        We miss seeing you on the floor! Please visit the gym reception or reply to this email to pick your renewal plan and restart your training.
-      </p>
-    `;
+    content = `<p>Hi <strong>${name}</strong>,</p><p>Your membership expires <strong>tomorrow (${formattedExpiry})</strong>. Please renew today to prevent card lockout.</p>`;
+  } else {
+    subject = '🔴 Your Phoenix Gym Membership Has Expired';
+    content = `<p>Hi <strong>${name}</strong>,</p><p>Your membership expired on <strong>${formattedExpiry}</strong>. We miss you! Reply to this email or visit reception to pick a new plan.</p>`;
   }
 
   const htmlBody = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background-color: #ffffff;">
-      <div style="background-color: ${headerBg}; padding: 24px; text-align: center; color: #ffffff;">
-        <h1 style="margin: 0; font-size: 22px; font-weight: 800; tracking-letter: 1px;">${CONFIG.GYM_NAME}</h1>
-        <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">Membership Renewal Notification</p>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+      <div style="background-color: #dc2626; padding: 20px; text-align: center; color: #ffffff;">
+        <h2 style="margin: 0;">${CONFIG.GYM_NAME}</h2>
       </div>
-      <div style="padding: 28px;">
-        ${bodyContent}
-        <div style="margin-top: 24px; padding: 16px; background-color: #f8fafc; border-left: 4px solid ${headerBg}; border-radius: 4px;">
-          <p style="margin: 0; font-size: 13px; color: #64748b;"><strong>Expiry Date:</strong> ${formattedExpiry}</p>
-          <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;"><strong>Gym Contact:</strong> Reception Desk / Reply to this email</p>
-        </div>
+      <div style="padding: 24px; color: #333333; line-height: 1.6;">
+        ${content}
       </div>
-      <div style="background-color: #f1f5f9; padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">
-        © ${new Date().getFullYear()} ${CONFIG.GYM_NAME}. All rights reserved.
+      <div style="background-color: #f8fafc; padding: 12px; text-align: center; font-size: 12px; color: #64748b;">
+        © 2026 ${CONFIG.GYM_NAME}. Admin: ${CONFIG.ADMIN_EMAIL}
       </div>
     </div>
   `;
@@ -289,51 +250,28 @@ function generateEmailTemplate(reminderType, clientName, expiryDate) {
 }
 
 // ==============================================================================
-// UTILITIES & HELPER FUNCTIONS
+// UTILITIES
 // ==============================================================================
-function validateEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
+function isTrue(val) { return val === true || String(val).toUpperCase() === 'TRUE'; }
+function validateEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function cleanPhone(p) {
+  let cleaned = String(p).replace(/\D/g, '');
+  if (cleaned.length === 10) cleaned = '91' + cleaned;
+  return cleaned.length >= 10 ? cleaned : '';
 }
-
-function parseDate(dateVal) {
-  if (!dateVal) return null;
-  if (dateVal instanceof Date && !isNaN(dateVal)) {
-    return dateVal;
-  }
-  const parsed = new Date(dateVal);
-  return !isNaN(parsed) ? parsed : null;
-}
-
+function parseDate(d) { return d instanceof Date && !isNaN(d) ? d : new Date(d); }
 function getNormalizedToday() {
-  const now = new Date();
-  const dateStr = Utilities.formatDate(now, CONFIG.TIMEZONE, 'yyyy-MM-dd');
-  const parts = dateStr.split('-');
+  const parts = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd').split('-');
   return new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
 }
-
-function calculateDaysDifference(todayDate, expiryDate) {
-  const expStr = Utilities.formatDate(expiryDate, CONFIG.TIMEZONE, 'yyyy-MM-dd');
-  const parts = expStr.split('-');
-  const expNormalized = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
-
-  const diffTime = expNormalized.getTime() - todayDate.getTime();
-  return Math.round(diffTime / (1000 * 3600 * 24));
+function calculateDaysDifference(today, exp) {
+  const parts = Utilities.formatDate(exp, CONFIG.TIMEZONE, 'yyyy-MM-dd').split('-');
+  const expNorm = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0);
+  return Math.round((expNorm.getTime() - today.getTime()) / (1000 * 3600 * 24));
 }
+function formatDate(d) { return Utilities.formatDate(d, CONFIG.TIMEZONE, 'dd MMM yyyy'); }
 
-function formatDate(dateObj) {
-  return Utilities.formatDate(dateObj, CONFIG.TIMEZONE, 'dd MMM yyyy');
-}
-
-// ==============================================================================
-// MANUAL TESTING FUNCTION
-// ==============================================================================
-/**
- * Test function to trigger email dispatch directly from Apps Script Editor.
- */
-function testReminder() {
-  Logger.log('--- MANUAL TEST START ---');
-  CONFIG.TEST_MODE = true; // Safety enforce test mode
-  sendMembershipReminders();
-  Logger.log('--- MANUAL TEST END ---');
+function testDualReminders() {
+  CONFIG.TEST_MODE = true;
+  runDualReminders();
 }

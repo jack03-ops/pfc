@@ -1,6 +1,6 @@
-Client Name,Email,Membership Start Date,Membership Expiry Date,Membership Status,7-Day Reminder Sent,3-Day Reminder Sent,1-Day Reminder Sent,Expiry Reminder Sent,Last Email Sent,Last Email Type,Error/Status
-Hari Ram Kumar,hariramkumar2030@gmail.com,2026-08-01,2026-09-01,Active,FALSE,FALSE,FALSE,FALSE,,,Ready (7-Day Reminder)
-Suresh Raina,hariramkumar2030@gmail.com,2026-07-28,2026-08-28,Active,FALSE,FALSE,FALSE,FALSE,,,Ready (3-Day Reminder)
-Karthik Kumar,hariramkumar2030@gmail.com,2026-07-26,2026-08-26,Active,FALSE,FALSE,FALSE,FALSE,,,Ready (1-Day Reminder)
-Dhanush Raj,hariramkumar2030@gmail.com,2026-07-25,2026-08-25,Active,FALSE,FALSE,FALSE,FALSE,,,Ready (Expiry Email)
-Simran Kaur,hariramkumar2030@gmail.com,2026-08-10,2026-09-10,Active,FALSE,FALSE,FALSE,FALSE,,,No Action Needed (16 Days)
+Client Name,Email,Phone Number,Membership Start Date,Membership Expiry Date,Membership Status,7-Day Reminder Sent,3-Day Reminder Sent,1-Day Reminder Sent,Expiry Reminder Sent,Last Sent Timestamp,Last Sent Channel,Error / Log Status
+Hari Ram Kumar,hariramkumar2030@gmail.com,+91 9487817301,2026-08-01,2026-09-09,Active,FALSE,FALSE,FALSE,FALSE,,,Ready (7-Day Reminder)
+Suresh Raina,hariramkumar2030@gmail.com,+91 9487817301,2026-07-28,2026-09-05,Active,FALSE,FALSE,FALSE,FALSE,,,Ready (3-Day Reminder)
+Karthik Kumar,hariramkumar2030@gmail.com,+91 9487817301,2026-07-26,2026-09-03,Active,FALSE,FALSE,FALSE,FALSE,,,Ready (1-Day Reminder)
+Dhanush Raj,hariramkumar2030@gmail.com,+91 9487817301,2026-07-25,2026-09-02,Active,FALSE,FALSE,FALSE,FALSE,,,Ready (Expiry Email)
+Simran Kaur,hariramkumar2030@gmail.com,+91 9487817301,2026-08-10,2026-09-18,Active,FALSE,FALSE,FALSE,FALSE,,,No Action Needed (16 Days)
