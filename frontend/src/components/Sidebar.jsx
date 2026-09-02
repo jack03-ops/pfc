@@ -28,12 +28,12 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout }) {
       <div>
         {/* Gym Logo / Brand */}
         <div className="p-5 flex items-center gap-3 border-b border-zinc-900">
-          <div className="p-1 rounded-xl border border-red-500/30 animate-pulse-glow bg-zinc-950 shrink-0">
-            <img src={phoenixLogo} alt="Phoenix Logo" className="w-8 h-8 object-contain" />
+          <div className="p-1.5 rounded-2xl border border-red-500/40 bg-zinc-950/90 shrink-0 shadow-md shadow-red-950/40">
+            <img src={phoenixLogo} alt="Phoenix Fitness Centre Logo" className="w-10 h-10 object-contain" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white m-0">Phoenix Gym</h1>
-            <span className="text-[10px] text-red-500 font-semibold uppercase tracking-wider">Admin System</span>
+            <h1 className="text-base font-black tracking-tight text-white m-0 leading-tight">Phoenix Fitness</h1>
+            <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider block mt-0.5">Centre Core</span>
           </div>
         </div>
 
