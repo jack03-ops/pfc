@@ -155,27 +155,6 @@ export default function Dashboard({ members, payments, setPage }) {
 
   return (
     <div className="w-full max-w-full p-8 space-y-8 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-80px)] bg-[#030303]">
-      {/* Welcome Banner */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-gradient-to-r from-zinc-950 to-zinc-900 p-8 rounded-3xl border border-zinc-900 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[40%] h-full bg-red-600/5 blur-[80px] animate-pulse-glow" />
-        <div className="space-y-2">
-          <h2 className="text-2xl font-black text-white m-0 tracking-tight flex items-center gap-2">
-            <Dumbbell className="w-6 h-6 text-red-500" />
-            Phoenix Fitness Centre Core
-          </h2>
-          <p className="text-xs text-zinc-400 max-w-lg">
-            Monitor real-time subscription telemetry, outstanding dues alerts, and automate direct WhatsApp reminders.
-          </p>
-        </div>
-        <button 
-          onClick={() => setPage('add-member')}
-          className="mt-4 md:mt-0 px-5 py-3 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          Add Member
-        </button>
-      </div>
-
       {/* Real-time Dashboard Statistics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
