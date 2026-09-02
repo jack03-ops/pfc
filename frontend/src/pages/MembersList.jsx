@@ -74,11 +74,7 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
   return (
     <div className="p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-80px)]">
       {/* Header Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-black text-white tracking-tight">Gym Members Directory</h2>
-          <p className="text-xs text-slate-400 mt-1">Manage physical files, subscriptions, active batches, and alerts.</p>
-        </div>
+      <div className="flex justify-end">
         <button
           onClick={() => setPage('add-member')}
           className="px-4 py-2.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0 self-start md:self-auto"

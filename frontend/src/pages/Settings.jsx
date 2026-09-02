@@ -65,14 +65,6 @@ export default function Settings({ onSettingsUpdate }) {
 
   return (
     <div className="p-8 space-y-8 overflow-y-auto max-h-[calc(100vh-80px)]">
-      <div>
-        <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-          <SettingsIcon className="w-6 h-6 text-red-500" />
-          Gym Settings & Parameters
-        </h2>
-        <p className="text-xs text-slate-400 mt-1">Configure brand labels, customizable subscription plans, and billing configurations.</p>
-      </div>
-
       {successMsg && (
         <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold rounded-xl text-xs max-w-3xl">
           {successMsg}
@@ -197,18 +189,6 @@ export default function Settings({ onSettingsUpdate }) {
 
         {/* Security & System sidecards */}
         <div className="space-y-6">
-          <div className="glass-panel p-6 rounded-2xl border border-zinc-900 space-y-4">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider border-b border-zinc-900 pb-3 flex items-center gap-1.5">
-              <Shield className="w-4 h-4 text-cyan-400" />
-              Portal Security
-            </h3>
-            
-            <div className="text-xs text-slate-400 space-y-2">
-              <p className="font-semibold text-slate-200">Local Ledger Enabled</p>
-              <p>All CRUD configurations reside directly inside browser sandbox via secure standard localStorage allocations. No active cloud connection needed.</p>
-            </div>
-          </div>
-
           <div className="glass-panel p-6 rounded-2xl border border-zinc-900 text-center space-y-4">
             <Heart className="w-8 h-8 text-rose-500 mx-auto animate-pulse" />
             <h3 className="text-sm font-black text-white uppercase tracking-wider">Phoenix Fitness</h3>

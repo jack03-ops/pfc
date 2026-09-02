@@ -73,14 +73,6 @@ export default function Notifications({ members, payments, onMarkAsPaid, setPage
 
   return (
     <div className="p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-80px)]">
-      <div>
-        <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-          <Bell className="w-6 h-6 text-red-500" />
-          Alert Feed & Action Center
-        </h2>
-        <p className="text-xs text-slate-400 mt-1">Review critical pending balances, client expirations, and triggers.</p>
-      </div>
-
       <div className="glass-panel rounded-2xl border border-zinc-900 divide-y divide-zinc-900/80 shadow-2xl max-w-4xl">
         {alertsList.length > 0 ? (
           alertsList.map((alert) => {

@@ -52,14 +52,9 @@ export default function Reports({ members, payments }) {
   return (
     <div className="p-8 space-y-8 overflow-y-auto max-h-[calc(100vh-80px)]">
       {/* Tab controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900 pb-5">
-        <div>
-          <h2 className="text-2xl font-black text-white tracking-tight">Phoenix Analytics & Telemetry</h2>
-          <p className="text-xs text-slate-400 mt-1">Review operational performance charts, cash receipts, and geographical hotspots.</p>
-        </div>
-
+      <div className="flex justify-end border-b border-zinc-900 pb-5">
         {/* Cycles Selector */}
-        <div className="inline-flex bg-zinc-900 border border-zinc-900 p-1.5 rounded-xl shrink-0 self-start md:self-auto">
+        <div className="inline-flex bg-zinc-900 border border-zinc-900 p-1.5 rounded-xl">
           {['daily', 'weekly', 'monthly'].map((tab) => (
             <button
               key={tab}
