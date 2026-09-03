@@ -3,8 +3,8 @@ import { Flame, Lock, Mail, Dumbbell, ShieldCheck } from 'lucide-react';
 import phoenixLogo from '../assets/phoenix_logo.png';
 
 export default function Login({ onLoginSuccess }) {
-  const [email, setEmail] = useState('admin@phoenixgym.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('phoenixfitnesscentre03@gmail.com');
+  const [password, setPassword] = useState('phoenix fitness centre');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -14,10 +14,13 @@ export default function Login({ onLoginSuccess }) {
     setLoading(true);
 
     setTimeout(() => {
-      if (email === 'admin@phoenixgym.com' && password === 'admin123') {
-        onLoginSuccess({ email, name: 'Phoenix Gym Manager' });
+      const isOfficialAccount = email.trim().toLowerCase() === 'phoenixfitnesscentre03@gmail.com' && password === 'phoenix fitness centre';
+      const isDemoAccount = email.trim().toLowerCase() === 'admin@phoenixgym.com' && password === 'admin123';
+
+      if (isOfficialAccount || isDemoAccount) {
+        onLoginSuccess({ email: email.trim(), name: 'Phoenix Gym Manager' });
       } else {
-        setError('Invalid email or password. Please use standard demo credentials.');
+        setError('Invalid email or password. Please check your credentials.');
         setLoading(false);
       }
     }, 800);
@@ -38,7 +41,6 @@ export default function Login({ onLoginSuccess }) {
           <h2 className="text-3xl font-extrabold text-white tracking-tight">Phoenix Fitness Gym</h2>
           <p className="text-zinc-400 text-sm mt-1">Management Portal & Admin Telemetry</p>
         </div>
-
 
         {/* Card Panel */}
         <div className="glass-panel p-5 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden border border-zinc-900">
@@ -64,7 +66,7 @@ export default function Login({ onLoginSuccess }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-all placeholder:text-zinc-650"
-                  placeholder="admin@phoenixgym.com"
+                  placeholder="phoenixfitnesscentre03@gmail.com"
                   required
                 />
               </div>
@@ -109,13 +111,13 @@ export default function Login({ onLoginSuccess }) {
               <Dumbbell className="w-4 h-4" />
             </div>
             <div className="text-[11px] text-zinc-400">
-              <p className="font-semibold text-zinc-300">Demo Access Enabled</p>
-              <p className="mt-0.5">Use email: <code className="text-red-400">admin@phoenixgym.com</code> and password: <code className="text-red-400">admin123</code></p>
+              <p className="font-semibold text-zinc-300">Official Admin Credentials Pre-configured</p>
+              <p className="mt-0.5">Email: <code className="text-red-400">phoenixfitnesscentre03@gmail.com</code></p>
+              <p className="mt-0.5">Password: <code className="text-red-400">phoenix fitness centre</code></p>
             </div>
           </div>
         </div>
       </div>
     </div>
-
   );
 }
