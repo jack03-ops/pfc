@@ -146,8 +146,16 @@ export const saveReminders = (reminders) => {
   localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
 };
 
-// Seed utility to fully initialize all stores on application mount
+// Seed utility to fully initialize all stores on application mount and sync database version
 export const initializeDb = () => {
+  const currentVersion = localStorage.getItem('phoenix_gym_db_ver');
+  if (currentVersion !== 'v3_single_user') {
+    // Override old cached local storage to ensure 100% parity across mobile and desktop
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERS));
+    localStorage.setItem(PAYMENTS_KEY, JSON.stringify(DEFAULT_PAYMENTS));
+    localStorage.setItem(REMINDERS_KEY, JSON.stringify(DEFAULT_REMINDERS));
+    localStorage.setItem('phoenix_gym_db_ver', 'v3_single_user');
+  }
   getMembers();
   getSettings();
   getPayments();
