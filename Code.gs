@@ -3,7 +3,7 @@
  * PHOENIX FITNESS CENTRE - DUAL AUTOMATED EMAIL + WHATSAPP REMINDER SYSTEM
  * ==============================================================================
  * Stack: Google Sheets + Google Apps Script + Gmail + WhatsApp API
- * Target Admin Email: hariramkumar2030@gmail.com
+ * Target Admin Email: phoenixfitnesscentre03@gmail.com
  * Timezone: Asia/Kolkata (IST)
  */
 
@@ -12,7 +12,7 @@
 // ==============================================================================
 const CONFIG = {
   GYM_NAME: 'Phoenix Fitness Centre',
-  ADMIN_EMAIL: 'hariramkumar2030@gmail.com', // Target Email in TEST_MODE
+  ADMIN_EMAIL: 'phoenixfitnesscentre03@gmail.com', // Target Email in TEST_MODE
   TEST_MODE: true,                            // Set to FALSE when going LIVE
   ENABLE_EMAIL: true,                         // Enable/Disable Gmail Email Reminders
   ENABLE_WHATSAPP: true,                      // Enable/Disable WhatsApp Reminders
