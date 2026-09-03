@@ -24,30 +24,24 @@ const DEFAULT_MEMBERS = [
     dob: "1998-08-15",
     age: 28,
     height: 175,
-    village: "Badshahpur",
-    address: "Sector 66, Badshahpur",
-    gender: "Male",
-    dob: "1991-01-20",
-    age: 35,
-    height: 172,
-    weight: 78,
-    bmi: 26.4,
-    emergencyContact: "+91 9122334400",
-    email: "rajesh.kumar@corp.com",
-    purposeOfJoining: "Fitness",
+    weight: 74,
+    bmi: 24.2,
+    emergencyContact: "+91 9487817301",
+    email: "hariramkumar2030@gmail.com",
+    purposeOfJoining: "Fitness & Strength",
     gymExperience: "Yes",
-    profession: "Business Person",
-    amountPaid: 5000,
+    profession: "Software Specialist",
+    amountPaid: 1000,
     hasMedicalCondition: "No",
     medicalConditionDetails: "",
-    membershipType: "Renewal",
-    joiningDate: "2026-04-05",
-    plan: "Half-Yearly",
-    startDate: "2026-04-05",
-    endDate: "2026-10-05",
+    membershipType: "New",
+    joiningDate: "2026-09-03",
+    plan: "Monthly",
+    startDate: "2026-09-03",
+    endDate: "2026-09-06",
     paymentStatus: "Paid",
     status: "Active",
-    notes: "Focus on functional strength & stamina."
+    notes: "Primary registered gym member profile."
   },
   {
     id: "PXM-1006",
@@ -93,10 +87,7 @@ const DEFAULT_SETTINGS = {
 };
 
 const DEFAULT_PAYMENTS = [
-  { id: "TXN-101", clientId: "PXM-1001", clientName: "Karthik Kumar", amount: 1000, date: "2026-04-28", plan: "Monthly", method: "UPI" },
-  { id: "TXN-102", clientId: "PXM-1002", clientName: "Suresh Raina", amount: 1000, date: "2026-04-30", plan: "Monthly", method: "Cash" },
-  { id: "TXN-103", clientId: "PXM-1003", clientName: "Dhanush Raj", amount: 1000, date: "2026-05-02", plan: "Monthly", method: "UPI" },
-  { id: "TXN-104", clientId: "PXM-1005", clientName: "Rajesh Kumar", amount: 5000, date: "2026-04-05", plan: "Half-Yearly", method: "UPI" }
+  { id: "TXN-101", clientId: "PXM-1001", clientName: "Hari Ram Kumar", amount: 1000, date: "2026-09-03", plan: "Monthly", method: "UPI" }
 ];
 
 const DEFAULT_REMINDERS = [
