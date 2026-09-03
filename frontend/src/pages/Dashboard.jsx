@@ -164,6 +164,7 @@ export default function Dashboard({ members, payments, setPage }) {
           trend="+12%" 
           trendType="up"
           glowColor="red"
+          onClick={() => setPage('members')}
         />
         <StatCard 
           title="Expiring Soon" 
@@ -172,6 +173,7 @@ export default function Dashboard({ members, payments, setPage }) {
           trend="Action Required" 
           trendType="down"
           glowColor="default"
+          onClick={() => setPage('notifications')}
         />
         <StatCard 
           title="Payments Pending" 
@@ -180,6 +182,7 @@ export default function Dashboard({ members, payments, setPage }) {
           trend="Invoices Outstanding" 
           trendType="down"
           glowColor="default"
+          onClick={() => setPage('payments')}
         />
         <StatCard 
           title="Today's Renewals" 
@@ -188,6 +191,7 @@ export default function Dashboard({ members, payments, setPage }) {
           trend="Active Subscriptions" 
           trendType="up"
           glowColor="cyan"
+          onClick={() => setPage('members')}
         />
       </div>
 
