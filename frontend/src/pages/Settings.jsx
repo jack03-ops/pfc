@@ -64,7 +64,7 @@ export default function Settings({ onSettingsUpdate }) {
   };
 
   return (
-    <div className="p-8 space-y-8 overflow-y-auto max-h-[calc(100vh-80px)]">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 overflow-y-auto max-h-[calc(100vh-60px)] md:max-h-[calc(100vh-80px)]">
       {successMsg && (
         <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold rounded-xl text-xs max-w-3xl">
           {successMsg}

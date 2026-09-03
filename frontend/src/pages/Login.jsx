@@ -41,7 +41,7 @@ export default function Login({ onLoginSuccess }) {
 
 
         {/* Card Panel */}
-        <div className="glass-panel p-8 rounded-3xl shadow-2xl relative overflow-hidden border border-zinc-900">
+        <div className="glass-panel p-5 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden border border-zinc-900">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-red-600 via-rose-600 to-cyan-500" />
           
           <h3 className="text-xl font-bold text-white mb-6">Staff Log In</h3>
@@ -90,7 +90,7 @@ export default function Login({ onLoginSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3.5 px-4 bg-gradient-to-r from-red-650 to-red-500 hover:from-red-500 hover:to-rose-450 text-white font-semibold rounded-xl text-sm transition-all duration-200 shadow-lg shadow-red-950/40 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full mt-2 py-3.5 px-4 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white font-semibold rounded-xl text-sm transition-all duration-200 shadow-lg shadow-red-950/40 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

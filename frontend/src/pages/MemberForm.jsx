@@ -188,7 +188,7 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
   };
 
   return (
-    <div className="p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-80px)]">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-60px)] md:max-h-[calc(100vh-80px)]">
       {/* Header */}
       <div className="flex justify-end">
         <button
