@@ -19,8 +19,8 @@ import notificationRoutes from './routes/notificationRoutes.js';
 // Init env setup
 dotenv.config();
 
-// Connect to MongoDB
-connectDB();
+// Keep the startup promise so a serverless cron invocation can wait for MongoDB.
+const databaseConnection = connectDB();
 
 const app = express();
 
@@ -66,8 +66,24 @@ const seedDatabase = async () => {
 seedDatabase();
 
 // Initialize automated background scheduler
-import { initScheduler } from './services/scheduler.js';
+import { initScheduler, runAutomatedReminders } from './services/scheduler.js';
 initScheduler();
+
+// Vercel invokes this endpoint every day. Its Bearer token is CRON_SECRET.
+app.get('/api/cron/membership-reminders', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || req.headers.authorization !== `Bearer ${cronSecret}`) {
+    return res.status(401).json({ success: false, message: 'Unauthorized cron request.' });
+  }
+  try {
+    await databaseConnection;
+    const result = await runAutomatedReminders();
+    return res.status(200).json({ success: true, dispatched: result.dispatchedCount });
+  } catch (error) {
+    console.error(`[Cron] ${error.message}`);
+    return res.status(500).json({ success: false, message: 'Reminder run failed.' });
+  }
+});
 
 // Mount Routes
 app.use('/api/auth', authRoutes);

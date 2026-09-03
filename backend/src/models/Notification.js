@@ -12,11 +12,15 @@ const NotificationSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true
+    default: ''
+  },
+  email: {
+    type: String,
+    default: ''
   },
   type: {
     type: String,
-    enum: ['SMS', 'WhatsApp'],
+    enum: ['SMS', 'WhatsApp', 'Email'],
     required: true
   },
   message: {

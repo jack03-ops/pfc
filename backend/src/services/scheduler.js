@@ -1,154 +1,60 @@
 import mongoose from 'mongoose';
 import Member from '../models/Member.js';
 import Notification from '../models/Notification.js';
-import { sendSMS } from './smsService.js';
-import { sendWhatsAppMessage } from './whatsappService.js';
+import { buildExpiryEmail, sendExpiryEmail } from './emailService.js';
 
-// Retry helper for sending WhatsApp messages
-const sendWhatsAppWithRetry = async (phone, message, maxRetries = 3) => {
-  let attempts = 0;
-  while (attempts < maxRetries) {
-    try {
-      const result = await sendWhatsAppMessage(phone, message);
-      return result;
-    } catch (error) {
-      attempts++;
-      console.warn(`[WhatsApp Retry] Attempt ${attempts} failed for ${phone}: ${error.message}`);
-      if (attempts >= maxRetries) {
-        throw error;
-      }
-      // Wait for 1 second before retrying
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-  }
-};
+const DAY_MS = 24 * 60 * 60 * 1000;
+const startOfUtcDay = (date) => new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 
-// Main task to run automated daily reminders
+// The delivery log makes the job idempotent when Vercel retries a cron request.
 export const runAutomatedReminders = async () => {
-  if (mongoose.connection.readyState !== 1) {
-    console.log('[Scheduler] Skipping reminder check (MongoDB not connected).');
-    return;
-  }
-  console.log('[Scheduler] Executing scheduled membership expiry scanning...');
-  try {
-    const today = new Date();
-    today.setHours(0,0,0,0);
+  if (mongoose.connection.readyState !== 1) throw new Error('MongoDB is not connected.');
 
-    const intervals = [5, 3, 1]; // 5, 3, and 1 days before expiry
-    let dispatchedCount = 0;
-    
-    for (const days of intervals) {
-      const targetDate = new Date(today);
-      targetDate.setDate(today.getDate() + days);
+  const today = startOfUtcDay(new Date());
+  let dispatchedCount = 0;
+  const logs = [];
 
-      const nextDay = new Date(targetDate);
-      nextDay.setDate(targetDate.getDate() + 1);
+  for (const daysLeft of [3, 1]) {
+    const targetDate = new Date(today.getTime() + daysLeft * DAY_MS);
+    const nextDate = new Date(targetDate.getTime() + DAY_MS);
+    const members = await Member.find({ activeStatus: true, endDate: { $gte: targetDate, $lt: nextDate } });
 
-      // Locate active members whose membership ends in this targetDate window
-      const membersExpiring = await Member.find({
-        activeStatus: true,
-        endDate: { $gte: targetDate, $lt: nextDay }
+    for (const member of members) {
+      const existing = await Notification.findOne({
+        memberId: member._id,
+        type: 'Email',
+        createdAt: { $gte: today, $lt: new Date(today.getTime() + DAY_MS) },
+        message: { $regex: `\\[expiry-${daysLeft}-day\\]` }
       });
+      if (existing) continue;
 
-      for (const member of membersExpiring) {
-        const startOfToday = new Date(today);
-        const endOfToday = new Date(today);
-        endOfToday.setHours(23,59,59,999);
-
-        // Construct distinct reminder messages per interval
-        let reminderText = '';
-        if (days === 5) {
-          reminderText = `Hello ${member.fullName}, your Phoenix Gym membership expires in 5 day(s). Please renew your membership to continue uninterrupted access. Don't break your workout streak!`;
-        } else if (days === 3) {
-          reminderText = `Hello ${member.fullName}, your Phoenix Gym membership expires in 3 day(s). Please renew your membership to continue uninterrupted access. Early renewals keep your fitness routine on track!`;
-        } else {
-          reminderText = `Hello ${member.fullName}, your Phoenix Gym membership expires in 1 day(s). Please renew your membership to continue uninterrupted access. Secure your slot to avoid lockout!`;
-        }
-
-        const targetPhone = '+91 9487817301'; // Force strictly this test number
-
-        // 1. WhatsApp Dispatch with retry and duplicate prevention
-        try {
-          const alreadySentWA = await Notification.findOne({
-            memberId: member._id,
-            type: 'WhatsApp',
-            createdAt: { $gte: startOfToday, $lte: endOfToday }
-          });
-
-          if (!alreadySentWA) {
-            let status = 'Sent';
-            try {
-              await sendWhatsAppWithRetry(targetPhone, reminderText);
-            } catch (err) {
-              status = 'Failed';
-            }
-
-            await Notification.create({
-              memberId: member._id,
-              clientName: member.fullName,
-              phone: targetPhone,
-              type: 'WhatsApp',
-              message: reminderText,
-              status
-            });
-            dispatchedCount++;
-          } else {
-            console.log(`[Scheduler] WhatsApp reminder already dispatched today for ${member.fullName}`);
-          }
-        } catch (err) {
-          console.error(`[Scheduler WA Error] Member ${member.fullName}: ${err.message}`);
-        }
-
-        // 2. SMS Dispatch with duplicate prevention
-        try {
-          const alreadySentSMS = await Notification.findOne({
-            memberId: member._id,
-            type: 'SMS',
-            createdAt: { $gte: startOfToday, $lte: endOfToday }
-          });
-
-          if (!alreadySentSMS) {
-            let status = 'Sent';
-            try {
-              await sendSMS(targetPhone, reminderText);
-            } catch (err) {
-              status = 'Failed';
-            }
-
-            await Notification.create({
-              memberId: member._id,
-              clientName: member.fullName,
-              phone: targetPhone,
-              type: 'SMS',
-              message: reminderText,
-              status
-            });
-            dispatchedCount++;
-          } else {
-            console.log(`[Scheduler] SMS reminder already dispatched today for ${member.fullName}`);
-          }
-        } catch (err) {
-          console.error(`[Scheduler SMS Error] Member ${member.fullName}: ${err.message}`);
-        }
+      const emailContent = buildExpiryEmail(member, daysLeft);
+      let status = 'Sent';
+      try {
+        await sendExpiryEmail(member, daysLeft);
+      } catch (error) {
+        status = 'Failed';
+        console.error(`[Email Reminder] ${member.clientId}: ${error.message}`);
       }
+
+      const notification = await Notification.create({
+        memberId: member._id,
+        clientName: member.fullName,
+        email: member.email || '',
+        type: 'Email',
+        message: `[expiry-${daysLeft}-day] ${emailContent.text}`,
+        status
+      });
+      logs.push(notification);
+      dispatchedCount += 1;
     }
-    console.log(`[Scheduler] Expiry alerts check completed. Dispatched ${dispatchedCount} reminders.`);
-  } catch (error) {
-    console.error(`[Scheduler Error] Automated reminder check encountered an error: ${error.message}`);
   }
+  return { dispatchedCount, logs };
 };
 
-// Initialize automated background scheduling
+// Locally, keep the convenient daily scan. Vercel uses its cron endpoint.
 export const initScheduler = () => {
-  console.log('[Scheduler] Initializing automated daily reminder scheduler...');
-  
-  // Run on startup
-  setTimeout(() => {
-    runAutomatedReminders();
-  }, 5000);
-
-  // Run every 24 hours
-  setInterval(() => {
-    runAutomatedReminders();
-  }, 24 * 60 * 60 * 1000);
+  if (process.env.VERCEL) return;
+  setTimeout(() => runAutomatedReminders().catch(error => console.error(`[Scheduler] ${error.message}`)), 5000);
+  setInterval(() => runAutomatedReminders().catch(error => console.error(`[Scheduler] ${error.message}`)), DAY_MS);
 };

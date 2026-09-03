@@ -28,3 +28,16 @@ npm run dev
 
 ## 🔒 Security & Deployment Configurations
 For complete detailed documentation on database configurations, environment variable mappings, system architecture specifications, and Step-by-Step Production Deployment procedures, refer to our system guides.
+
+### Automated membership-expiry emails
+
+Production checks active memberships daily at 08:30 IST and emails clients exactly 3 days and 1 day before their end date. The sender defaults to `phoenixfitnesscentre03@gmail.com`. Set these Vercel environment variables before deploying:
+
+```text
+GMAIL_USER=phoenixfitnesscentre03@gmail.com
+GMAIL_APP_PASSWORD=your-16-character-Google-app-password
+CRON_SECRET=a-long-random-secret
+GYM_NAME=Phoenix Fitness Centre
+```
+
+Enable two-step verification on the sender Gmail account, then create a Google App Password; do not use the normal Gmail password. The notification log prevents duplicate emails.
