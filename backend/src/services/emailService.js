@@ -25,7 +25,34 @@ export const buildExpiryEmail = (member, daysLeft) => {
 export const sendExpiryEmail = async (member, daysLeft) => {
   if (!member.email || !/^\S+@\S+\.\S+$/.test(member.email)) throw new Error('Member does not have a valid email address.');
   const message = buildExpiryEmail(member, daysLeft);
-  const result = await getTransporter().sendMail({ from: `"${GYM_NAME}" <${FROM_EMAIL}>`, to: member.email, subject: message.subject, text: message.text, html: message.html });
+
+  const clientId = member.clientId || member.id || 'PXM-1001';
+  const invoiceNo = `PFC-RNW-${clientId.replace(/\D/g, '') || '101'}`;
+  const pdfBuffer = generateInvoicePdfBuffer({
+    invoiceNo,
+    clientName: member.fullName,
+    clientId,
+    plan: member.plan || 'Monthly',
+    amount: member.amountPaid ? Number(member.amountPaid) : 1000,
+    date: formatDate(new Date()),
+    phone: member.phone,
+    address: member.village || 'Rampur'
+  });
+
+  const result = await getTransporter().sendMail({
+    from: `"${GYM_NAME}" <${FROM_EMAIL}>`,
+    to: member.email,
+    subject: message.subject,
+    text: message.text,
+    html: message.html,
+    attachments: [
+      {
+        filename: `Phoenix_Renewal_Invoice_${invoiceNo}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      }
+    ]
+  });
   return { success: true, messageId: result.messageId, ...message };
 };
 

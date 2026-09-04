@@ -6,10 +6,12 @@ import {
   UserPlus, 
   CheckCircle2, 
   MessageSquare,
-  AlertTriangle 
+  AlertTriangle,
+  Mail,
+  Clock
 } from 'lucide-react';
 
-export default function Notifications({ members, payments, onMarkAsPaid, setPage }) {
+export default function Notifications({ members, payments, onMarkAsPaid, onSendReminderEmail, setPage }) {
   // Compute alerts dynamically from Mock DB
   const alertsList = useMemo(() => {
     const list = [];
@@ -23,13 +25,16 @@ export default function Notifications({ members, payments, onMarkAsPaid, setPage
         const endDate = new Date(m.endDate);
         if (endDate >= today && endDate <= fifteenDaysFromNow) {
           const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+          const isUrgent = daysLeft === 1;
+          const isThreeDay = daysLeft === 3;
           list.push({
             id: `exp-${m.id}`,
             type: 'expiration',
-            title: 'Membership Expiring Soon!',
-            message: `${m.fullName} (${m.id})'s ${m.plan} plan expires in ${daysLeft} days (${m.endDate}).`,
+            daysLeft: daysLeft,
+            title: isUrgent ? '🚨 Expires Tomorrow (1 Day Left!)' : isThreeDay ? '⏰ Expires in 3 Days' : `Membership Expiring in ${daysLeft} Days`,
+            message: `${m.fullName} (${m.id})'s ${m.plan} plan expires ${isUrgent ? 'tomorrow' : `in ${daysLeft} days`} on ${m.endDate}.`,
             member: m,
-            severity: 'warning'
+            severity: isUrgent ? 'danger' : 'warning'
           });
         }
       }
@@ -104,6 +109,22 @@ export default function Notifications({ members, payments, onMarkAsPaid, setPage
 
                 {/* Operations triggers */}
                 <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                  {/* Email Reminder prompt with attached PDF */}
+                  {alert.type === 'expiration' && alert.member.email && (
+                    <button
+                      onClick={() => onSendReminderEmail && onSendReminderEmail(alert.member, alert.daysLeft)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer border ${
+                        alert.daysLeft === 1
+                          ? 'bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border-rose-500/40 shadow-sm'
+                          : 'bg-amber-500/20 hover:bg-amber-600 text-amber-300 hover:text-white border-amber-500/40 shadow-sm'
+                      }`}
+                      title={`Send ${alert.daysLeft}-day reminder email & PDF invoice`}
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>{alert.daysLeft === 1 ? '1-Day Reminder' : '3-Day Reminder'}</span>
+                    </button>
+                  )}
+
                   {/* WhatsApp prompt */}
                   <button
                     onClick={() => handleWhatsAppAlert(alert.member)}

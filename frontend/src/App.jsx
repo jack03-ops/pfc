@@ -9,6 +9,7 @@ import Reports from './pages/Reports';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
 import WelcomeEmailModal from './components/WelcomeEmailModal';
+import ReminderEmailModal from './components/ReminderEmailModal';
 import { CheckCircle2 } from 'lucide-react';
 import { 
   getMembers, 
@@ -26,6 +27,7 @@ export default function App() {
   const [payments, setPayments] = useState([]);
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [welcomeMember, setWelcomeMember] = useState(null);
+  const [reminderMemberData, setReminderMemberData] = useState(null);
   const [toast, setToast] = useState(null);
 
   const showToast = (message, type = 'success') => {
@@ -239,7 +241,15 @@ export default function App() {
       case 'reports':
         return <Reports members={members} payments={payments} />;
       case 'notifications':
-        return <Notifications members={members} payments={payments} onMarkAsPaid={handleMarkAsPaid} setPage={setCurrentPage} />;
+        return (
+          <Notifications 
+            members={members} 
+            payments={payments} 
+            onMarkAsPaid={handleMarkAsPaid} 
+            onSendReminderEmail={(m, daysLeft) => setReminderMemberData({ member: m, daysLeft })}
+            setPage={setCurrentPage} 
+          />
+        );
       case 'settings':
         return <Settings onSettingsUpdate={() => setMembers(getMembers())} />;
       default:
@@ -298,6 +308,16 @@ export default function App() {
           member={welcomeMember}
           onClose={() => setWelcomeMember(null)}
           onEmailSent={(m) => showToast(`Welcome email recorded for ${m.fullName}!`, 'success')}
+        />
+      )}
+
+      {/* Expiry Reminder Email Modal */}
+      {reminderMemberData && (
+        <ReminderEmailModal
+          member={reminderMemberData.member}
+          daysLeft={reminderMemberData.daysLeft}
+          onClose={() => setReminderMemberData(null)}
+          onEmailSent={(m) => showToast(`Reminder notice with PDF invoice recorded for ${m.fullName}!`, 'success')}
         />
       )}
     </div>
