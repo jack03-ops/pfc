@@ -94,13 +94,16 @@ export default function App() {
     let updatedMembers = [];
     if (formData.id) {
       // Editing
-      updatedMembers = members.map(m => m.id === formData.id ? formData : m);
+      updatedMembers = members.map(m => m.id === formData.id ? { ...m, ...formData } : m);
     } else {
-      // Create auto Client ID
-      const nextId = 1001 + members.length;
-      const newId = `PXM-${nextId}`;
+      // Calculate robust unique Client ID from max existing ID
+      const maxNum = members.reduce((max, m) => {
+        const n = parseInt(String(m.id || '').replace(/\D/g, ''), 10);
+        return !isNaN(n) && n > max ? n : max;
+      }, 1000);
+      const newId = `PXM-${maxNum + 1}`;
       const newMember = { ...formData, id: newId };
-      updatedMembers = [...members, newMember];
+      updatedMembers = [newMember, ...members];
       
       // Also register initial payment log if Paid
       if (formData.paymentStatus === 'Paid') {
@@ -110,11 +113,11 @@ export default function App() {
           clientId: newId,
           clientName: formData.fullName,
           amount: formData.amountPaid ? Number(formData.amountPaid) : 1000,
-          date: formData.startDate,
-          plan: formData.plan,
+          date: formData.startDate || new Date().toISOString().split('T')[0],
+          plan: formData.plan || 'Monthly',
           method: 'UPI'
         };
-        const updatedPayments = [...payments, newTxn];
+        const updatedPayments = [newTxn, ...payments];
         setPayments(updatedPayments);
         savePayments(updatedPayments);
       }
@@ -128,7 +131,7 @@ export default function App() {
     setMembers(updatedMembers);
     saveMembers(updatedMembers);
     setMemberToEdit(null);
-    showToast(formData.id ? 'Member profile successfully updated!' : 'Gym member successfully registered!', 'success');
+    showToast(formData.id ? 'Member profile successfully updated!' : `Member successfully registered (${updatedMembers[0]?.id})!`, 'success');
     setCurrentPage('members');
   };
 

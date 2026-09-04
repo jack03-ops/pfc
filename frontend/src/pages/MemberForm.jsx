@@ -38,6 +38,7 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
   });
 
   const [errors, setErrors] = useState({});
+  const [formBannerError, setFormBannerError] = useState(null);
   const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
 
   // Auto-calculate expiry date & default plan price based on selected Plan
@@ -134,20 +135,19 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
   }, [isEditMode, memberToEdit]);
 
   const handlePhoneChange = (e, name) => {
-    let val = e.target.value;
-    if (!val.startsWith('+91 ')) {
-      const cleaned = val.replace(/^\+91\s*/, '').replace(/\D/g, '');
-      val = '+91 ' + cleaned;
-    } else {
-      const suffix = val.substring(4).replace(/\D/g, '');
-      val = '+91 ' + suffix;
+    let raw = e.target.value;
+    let digits = raw.replace(/\D/g, '');
+    if (digits.startsWith('91') && digits.length > 10) {
+      digits = digits.slice(2);
     }
-
-    if (val.length <= 14) {
-      setFormData(prev => ({
-        ...prev,
-        [name]: val
-      }));
+    digits = digits.slice(0, 10);
+    const formatted = digits ? `+91 ${digits}` : '+91 ';
+    setFormData(prev => ({
+      ...prev,
+      [name]: formatted
+    }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
     }
   };
 
@@ -157,41 +157,70 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
       ...prev,
       [name]: value
     }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   const validate = () => {
     const tempErrors = {};
-    if (!formData.fullName.trim()) tempErrors.fullName = 'Full Name is required';
+    if (!formData.fullName || !formData.fullName.trim()) {
+      tempErrors.fullName = 'Full Name is required';
+    }
     
-    const phoneDigits = formData.phone.substring(4).replace(/\D/g, '');
+    const phoneDigits = String(formData.phone || '').replace(/\D/g, '').replace(/^91/, '');
     if (phoneDigits.length !== 10) {
       tempErrors.phone = 'Valid 10-digit mobile number required';
     }
 
-    const whatsappDigits = formData.whatsapp.substring(4).replace(/\D/g, '');
-    if (formData.whatsapp.trim() !== '+91' && formData.whatsapp.trim() !== '' && whatsappDigits.length > 0 && whatsappDigits.length !== 10) {
-      tempErrors.whatsapp = 'Valid 10-digit WhatsApp number required or leave blank';
+    if (formData.whatsapp && formData.whatsapp.trim() !== '+91' && formData.whatsapp.trim() !== '') {
+      const waDigits = String(formData.whatsapp || '').replace(/\D/g, '').replace(/^91/, '');
+      if (waDigits.length > 0 && waDigits.length !== 10) {
+        tempErrors.whatsapp = 'Valid 10-digit WhatsApp number required or leave blank';
+      }
     }
 
-    if (!formData.village.trim()) tempErrors.village = 'Village name is required';
-    if (!formData.age || formData.age < 12 || formData.age > 100) {
-      tempErrors.age = 'Age must be between 12 and 100';
-    }
-    
     setErrors(tempErrors);
-    return Object.keys(tempErrors).length === 0;
+    const isValid = Object.keys(tempErrors).length === 0;
+    if (!isValid) {
+      const firstMsg = Object.values(tempErrors)[0];
+      setFormBannerError(firstMsg);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => setFormBannerError(null), 6000);
+    }
+    return isValid;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    onSave(formData, { sendWelcomeEmail: !isEditMode && sendWelcomeEmail && !!formData.email?.trim() });
+
+    const phoneDigits = String(formData.phone || '').replace(/\D/g, '').replace(/^91/, '');
+    const waDigits = String(formData.whatsapp || '').replace(/\D/g, '').replace(/^91/, '');
+
+    const sanitizedData = {
+      ...formData,
+      fullName: formData.fullName.trim(),
+      phone: `+91 ${phoneDigits}`,
+      whatsapp: waDigits ? `+91 ${waDigits}` : `+91 ${phoneDigits}`,
+      village: formData.village?.trim() || 'Rampur',
+      age: Number(formData.age) || 25,
+      amountPaid: formData.amountPaid ? Number(formData.amountPaid) : 1000
+    };
+
+    onSave(sanitizedData, { sendWelcomeEmail: !isEditMode && sendWelcomeEmail && !!formData.email?.trim() });
   };
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-60px)] md:max-h-[calc(100vh-80px)]">
       {/* Header */}
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-black uppercase text-white tracking-wide">
+            {isEditMode ? 'Modify Member Profile' : 'Enroll New Gym Member'}
+          </h2>
+          <p className="text-xs text-zinc-400">Complete the member details below and click Save Member</p>
+        </div>
         <button
           onClick={onCancel}
           className="p-2 text-slate-400 hover:text-slate-200 bg-zinc-900 border border-zinc-900 rounded-xl transition-all cursor-pointer"
@@ -199,6 +228,13 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
           <X className="w-5 h-5" />
         </button>
       </div>
+
+      {formBannerError && (
+        <div className="p-4 bg-rose-500/15 border border-rose-500/40 rounded-2xl flex items-center gap-3 text-rose-300 text-xs font-bold animate-in fade-in">
+          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+          <span>Please check form: {formBannerError}</span>
+        </div>
+      )}
 
       {/* Form Panel */}
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">

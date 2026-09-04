@@ -357,10 +357,35 @@ const CLOUD_SYNC_URL = 'https://5pqzjtksdbperly4.public.blob.vercel-storage.com/
 // Fetch live centralized cloud data (shared across phone, laptop, tablet)
 export const fetchFromCloud = async () => {
   try {
-    const res = await fetch(`${CLOUD_SYNC_URL}?t=${Date.now()}`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (json && Array.isArray(json.members)) {
+    let json = null;
+    // Prefer server API which has instant in-memory cache and no-store headers
+    try {
+      const apiRes = await fetch(`/api/sync?t=${Date.now()}`, { cache: 'no-store' });
+      if (apiRes.ok) {
+        const body = await apiRes.json();
+        json = body && body.data ? body.data : body;
+      }
+    } catch (_) {}
+
+    // Fallback to direct blob if API unreachable
+    if (!json || !Array.isArray(json.members)) {
+      const blobRes = await fetch(`${CLOUD_SYNC_URL}?t=${Date.now()}`, { cache: 'no-store' });
+      if (blobRes.ok) {
+        json = await blobRes.json();
+      }
+    }
+
+    if (json && Array.isArray(json.members) && json.members.length > 0) {
+      const localMembers = getMembers();
+      const lastLocalEdit = parseInt(localStorage.getItem('phoenix_gym_last_edit_time') || '0', 10);
+      const now = Date.now();
+
+      // PROTECT RECENT LOCAL CHANGES (within last 30s) if local has at least as many members
+      if (now - lastLocalEdit < 30000 && localMembers.length >= json.members.length) {
+        syncToCloud(localMembers, getPayments());
+        return { members: localMembers, payments: getPayments() };
+      }
+
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.members));
       if (Array.isArray(json.payments)) {
         localStorage.setItem(PAYMENTS_KEY, JSON.stringify(json.payments));
@@ -376,14 +401,15 @@ export const fetchFromCloud = async () => {
 // Push live centralized cloud data (shared across phone, laptop, tablet)
 export const syncToCloud = async (members, payments) => {
   try {
+    const payload = {
+      members: members || getMembers(),
+      payments: payments || getPayments(),
+      updatedAt: new Date().toISOString()
+    };
     await fetch('/api/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        members: members || getMembers(),
-        payments: payments || getPayments(),
-        updatedAt: new Date().toISOString()
-      })
+      body: JSON.stringify(payload)
     });
   } catch (err) {
     console.warn('[Cloud Sync Push Warning]', err.message);
@@ -391,6 +417,7 @@ export const syncToCloud = async (members, payments) => {
 };
 
 export const saveMembers = (members) => {
+  localStorage.setItem('phoenix_gym_last_edit_time', String(Date.now()));
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(members));
   syncToCloud(members, getPayments());
 };

@@ -5,18 +5,28 @@ const router = express.Router();
 const BLOB_URL = 'https://5pqzjtksdbperly4.public.blob.vercel-storage.com/phoenix_sync.json';
 const BLOB_API = 'https://blob.vercel-storage.com/phoenix_sync.json';
 
+let inMemoryCloudData = null;
+
 // GET /api/sync - Fetch centralized cloud database
 router.get('/', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  if (inMemoryCloudData && Array.isArray(inMemoryCloudData.members) && inMemoryCloudData.members.length > 0) {
+    return res.status(200).json({ success: true, data: inMemoryCloudData });
+  }
+
   try {
     const response = await fetch(`${BLOB_URL}?t=${Date.now()}`, { cache: 'no-store' });
     if (!response.ok) {
-      return res.status(200).json({ success: true, data: null });
+      return res.status(200).json({ success: true, data: inMemoryCloudData });
     }
     const data = await response.json();
+    if (data && Array.isArray(data.members)) {
+      inMemoryCloudData = data;
+    }
     return res.status(200).json({ success: true, data });
   } catch (err) {
     console.error('[Cloud Sync GET Error]', err.message);
-    return res.status(200).json({ success: true, data: null, error: err.message });
+    return res.status(200).json({ success: true, data: inMemoryCloudData, error: err.message });
   }
 });
 
@@ -24,6 +34,9 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const payload = req.body;
+    if (payload && Array.isArray(payload.members)) {
+      inMemoryCloudData = payload;
+    }
     const token = process.env.BLOB_READ_WRITE_TOKEN || 'vercel_blob_rw_5PqzjTKSDbPeRly4_AtikctcAhGDWbp4U86UIQ8rCPFeblz';
     
     const uploadRes = await fetch(BLOB_API, {
