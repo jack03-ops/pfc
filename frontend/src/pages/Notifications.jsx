@@ -91,17 +91,34 @@ export default function Notifications({ members, payments, onMarkAsPaid, onSendR
               alert.severity === 'warning' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' :
               'bg-blue-500/10 border-blue-500/30 text-blue-400';
 
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isReminderSentToday = alert.member?.lastReminderDate === todayStr;
+
             return (
-              <div key={alert.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-900/10 transition-colors">
+              <div key={alert.id} className={`p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
+                isReminderSentToday ? 'bg-emerald-950/10 border-l-4 border-l-emerald-500' : 'hover:bg-zinc-900/10'
+              }`}>
                 <div className="flex gap-4">
-                  <div className={`p-3 rounded-xl border shrink-0 ${colorClass}`}>
-                    <Icon className="w-5 h-5 animate-pulse" />
+                  <div className={`p-3 rounded-xl border shrink-0 ${
+                    isReminderSentToday ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : colorClass
+                  }`}>
+                    <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-black uppercase text-white tracking-wider flex items-center gap-1.5">
-                      {alert.title}
-                      {alert.severity === 'danger' && <span className="bg-rose-500/15 text-rose-400 text-[8px] px-1.5 py-0.5 rounded font-black">CRITICAL</span>}
-                    </h4>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="text-xs font-black uppercase text-white tracking-wider flex items-center gap-1.5">
+                        {alert.title}
+                        {alert.severity === 'danger' && !isReminderSentToday && (
+                          <span className="bg-rose-500/15 text-rose-400 text-[8px] px-1.5 py-0.5 rounded font-black">CRITICAL</span>
+                        )}
+                      </h4>
+                      {isReminderSentToday && (
+                        <span className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-400 text-[9px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/30">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                          {alert.member.lastReminderType || 'Reminder'} Sent Today {alert.member.lastReminderTime ? `(${alert.member.lastReminderTime})` : ''}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[11px] text-slate-400 mt-1">{alert.message}</p>
                     <p className="text-[10px] text-slate-600 font-medium mt-1">Contact: {alert.member.phone} • Village: {alert.member.village}</p>
                   </div>
@@ -114,14 +131,16 @@ export default function Notifications({ members, payments, onMarkAsPaid, onSendR
                     <button
                       onClick={() => onSendReminderEmail && onSendReminderEmail(alert.member, alert.daysLeft)}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer border ${
-                        alert.daysLeft === 1
+                        isReminderSentToday
+                          ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border-emerald-500/40'
+                          : alert.daysLeft === 1
                           ? 'bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border-rose-500/40 shadow-sm'
                           : 'bg-amber-500/20 hover:bg-amber-600 text-amber-300 hover:text-white border-amber-500/40 shadow-sm'
                       }`}
-                      title={`Send ${alert.daysLeft}-day reminder email & PDF invoice`}
+                      title={isReminderSentToday ? `Notice sent today at ${alert.member.lastReminderTime || ''}. Click to resend.` : `Send ${alert.daysLeft}-day reminder email & PDF invoice`}
                     >
-                      <Mail className="w-3.5 h-3.5" />
-                      <span>{alert.daysLeft === 1 ? '1-Day Reminder' : '3-Day Reminder'}</span>
+                      {isReminderSentToday ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Mail className="w-3.5 h-3.5" />}
+                      <span>{isReminderSentToday ? '✓ Sent (Resend)' : alert.daysLeft === 1 ? '1-Day Reminder' : '3-Day Reminder'}</span>
                     </button>
                   )}
 

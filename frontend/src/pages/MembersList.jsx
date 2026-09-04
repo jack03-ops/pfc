@@ -251,6 +251,11 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                             </>
                           )}
                         </button>
+                        {member.lastReminderDate === new Date().toISOString().split('T')[0] && (
+                          <span className="block mt-1 text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 whitespace-nowrap">
+                            ✓ Reminder Sent
+                          </span>
+                        )}
                       </td>
 
                       {/* Actions */}
@@ -386,6 +391,11 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                   <div><span className="text-slate-500">Start Date:</span> <strong className="text-slate-200">{viewingMember.startDate}</strong></div>
                   <div><span className="text-slate-500">Expiry Date:</span> <strong className="text-slate-200">{viewingMember.endDate}</strong></div>
                   <div><span className="text-slate-500">Payment Status:</span> <strong className={viewingMember.paymentStatus === 'Paid' ? 'text-emerald-400' : 'text-rose-400'}>{viewingMember.paymentStatus}</strong></div>
+                  {viewingMember.lastReminderDate && (
+                    <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-emerald-300 text-[10px] mt-2">
+                      <span>✓ {viewingMember.lastReminderType || 'Reminder'} Sent: {viewingMember.lastReminderDate} {viewingMember.lastReminderTime ? `(${viewingMember.lastReminderTime})` : ''}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

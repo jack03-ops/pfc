@@ -17,7 +17,9 @@ import {
   getPayments, 
   savePayments, 
   initializeDb,
-  fetchFromCloud
+  fetchFromCloud,
+  recordMemberReminder,
+  recordMemberWelcomeEmail
 } from './db/mockDb';
 
 export default function App() {
@@ -151,6 +153,19 @@ export default function App() {
     setMembers(updated);
     saveMembers(updated);
     showToast('Member status updated successfully!', 'success');
+  };
+
+  const handleReminderSent = (member, daysLeft) => {
+    const reminderType = `${daysLeft}-Day Reminder`;
+    const updated = recordMemberReminder(member.id, reminderType);
+    setMembers(updated);
+    showToast(`✅ ${reminderType} recorded & marked as sent today for ${member.fullName}!`, 'success');
+  };
+
+  const handleWelcomeEmailSent = (member) => {
+    const updated = recordMemberWelcomeEmail(member.id);
+    setMembers(updated);
+    showToast(`✅ Welcome Email recorded for ${member.fullName}!`, 'success');
   };
 
   const handleEditMemberTrigger = (member) => {
@@ -307,7 +322,7 @@ export default function App() {
         <WelcomeEmailModal
           member={welcomeMember}
           onClose={() => setWelcomeMember(null)}
-          onEmailSent={(m) => showToast(`Welcome email recorded for ${m.fullName}!`, 'success')}
+          onEmailSent={handleWelcomeEmailSent}
         />
       )}
 
@@ -317,7 +332,7 @@ export default function App() {
           member={reminderMemberData.member}
           daysLeft={reminderMemberData.daysLeft}
           onClose={() => setReminderMemberData(null)}
-          onEmailSent={(m) => showToast(`Reminder notice with PDF invoice recorded for ${m.fullName}!`, 'success')}
+          onEmailSent={handleReminderSent}
         />
       )}
     </div>

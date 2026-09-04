@@ -438,12 +438,13 @@ export const saveReminders = (reminders) => {
 // Log welcome email dispatch to reminder ledger
 export const logWelcomeEmail = (member) => {
   const reminders = getReminders();
+  const today = new Date().toISOString().split('T')[0];
   const newLog = {
     id: `REM-${101 + reminders.length}`,
     clientName: member.fullName,
     phone: member.phone || '',
     email: member.email || '',
-    date: new Date().toISOString().split('T')[0],
+    date: today,
     type: 'Email',
     status: 'Sent',
     message: `[Welcome Message] Welcome to Phoenix Fitness Centre sent to ${member.email || member.fullName}`
@@ -451,6 +452,86 @@ export const logWelcomeEmail = (member) => {
   const updated = [newLog, ...reminders];
   saveReminders(updated);
   return newLog;
+};
+
+// Record sent reminder on member record and log to reminder ledger
+export const recordMemberReminder = (memberId, reminderType) => {
+  const today = new Date().toISOString().split('T')[0];
+  const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  const members = getMembers();
+  let targetMember = null;
+  const updatedMembers = members.map(m => {
+    if (m.id === memberId) {
+      targetMember = {
+        ...m,
+        lastReminderDate: today,
+        lastReminderTime: time,
+        lastReminderType: reminderType
+      };
+      return targetMember;
+    }
+    return m;
+  });
+
+  saveMembers(updatedMembers);
+
+  // Also log into reminders ledger
+  if (targetMember) {
+    const reminders = getReminders();
+    const newLog = {
+      id: `REM-${101 + reminders.length}`,
+      clientName: targetMember.fullName,
+      phone: targetMember.phone || '',
+      email: targetMember.email || '',
+      date: today,
+      time: time,
+      type: 'Email',
+      status: 'Sent',
+      message: `[${reminderType}] Notice & PDF Invoice sent to ${targetMember.email || targetMember.fullName}`
+    };
+    saveReminders([newLog, ...reminders]);
+  }
+
+  return updatedMembers;
+};
+
+// Record welcome email on member record
+export const recordMemberWelcomeEmail = (memberId) => {
+  const today = new Date().toISOString().split('T')[0];
+  const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  const members = getMembers();
+  let targetMember = null;
+  const updatedMembers = members.map(m => {
+    if (m.id === memberId) {
+      targetMember = {
+        ...m,
+        welcomeEmailSentDate: today,
+        welcomeEmailSentTime: time
+      };
+      return targetMember;
+    }
+    return m;
+  });
+
+  saveMembers(updatedMembers);
+
+  if (targetMember) {
+    const reminders = getReminders();
+    const newLog = {
+      id: `REM-${101 + reminders.length}`,
+      clientName: targetMember.fullName,
+      phone: targetMember.phone || '',
+      email: targetMember.email || '',
+      date: today,
+      time: time,
+      type: 'Email',
+      status: 'Sent',
+      message: `[Welcome Email] Welcome to Gym notice & PDF Invoice sent to ${targetMember.email || targetMember.fullName}`
+    };
+    saveReminders([newLog, ...reminders]);
+  }
+
+  return updatedMembers;
 };
 
 // Seed utility to fully initialize all stores on application mount and sync database version

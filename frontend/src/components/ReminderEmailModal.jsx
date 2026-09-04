@@ -80,7 +80,7 @@ Address: Near Temple, Rampur`;
 
     setSent(true);
     if (onEmailSent) {
-      onEmailSent(member);
+      onEmailSent(member, daysLeft);
     }
   };
 
