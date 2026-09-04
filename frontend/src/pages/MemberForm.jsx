@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X, Sparkles, AlertCircle, Heart, User, Dumbbell, ShieldAlert, CreditCard } from 'lucide-react';
+import { Save, X, Sparkles, AlertCircle, Heart, User, Dumbbell, ShieldAlert, CreditCard, Mail } from 'lucide-react';
 import { getSettings } from '../db/mockDb';
 
 export default function MemberForm({ memberToEdit, onSave, onCancel }) {
@@ -38,6 +38,7 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
   });
 
   const [errors, setErrors] = useState({});
+  const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
 
   // Auto-calculate expiry date & default plan price based on selected Plan
   useEffect(() => {
@@ -184,7 +185,7 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    onSave(formData);
+    onSave(formData, { sendWelcomeEmail: !isEditMode && sendWelcomeEmail && !!formData.email?.trim() });
   };
 
   return (
@@ -628,6 +629,23 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
                 placeholder="Time slot preferences, workout goals, specific notes..."
               />
             </div>
+
+            {/* Send Welcome Email Toggle (New enrollments only) */}
+            {!isEditMode && (
+              <div className="flex items-center gap-2.5 p-3 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-zinc-800 transition-all">
+                <input
+                  type="checkbox"
+                  id="sendWelcomeEmail"
+                  checked={sendWelcomeEmail}
+                  onChange={(e) => setSendWelcomeEmail(e.target.checked)}
+                  className="w-4 h-4 accent-red-600 rounded cursor-pointer"
+                />
+                <label htmlFor="sendWelcomeEmail" className="text-xs text-zinc-300 font-semibold cursor-pointer select-none flex items-center gap-1.5 flex-1">
+                  <Mail className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                  <span>Send Welcome Message to client upon enrollment</span>
+                </label>
+              </div>
+            )}
 
             <div className="flex gap-2">
               <button

@@ -248,6 +248,46 @@ function generateEmailTemplate(reminderType, name, expiryDate) {
   return { subject: subject, htmlBody: htmlBody };
 }
 
+function generateWelcomeEmailTemplate(name, memberId, plan, expiryDate) {
+  const formattedExpiry = formatDate(expiryDate);
+  const subject = '🏋️ Welcome to Phoenix Fitness Centre - ' + name + '!';
+  const content = `
+    <p>Hi <strong>${name}</strong>,</p>
+    <p>Welcome to <strong>${CONFIG.GYM_NAME}</strong>! 💪 We are thrilled to welcome you to our fitness family.</p>
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+      <p style="margin: 0 0 6px 0;"><strong>Member ID:</strong> ${memberId || 'PXM-1001'}</p>
+      <p style="margin: 0 0 6px 0;"><strong>Plan:</strong> ${plan || 'Monthly'}</p>
+      <p style="margin: 0 0 6px 0;"><strong>Expiry Date:</strong> ${formattedExpiry}</p>
+      <p style="margin: 0;"><strong>Timings:</strong> Mon – Sat: 5:00 AM – 10:00 PM</p>
+    </div>
+    <p>Please visit reception if you need personal workout guidance or have any questions.</p>
+    <p style="margin-top: 20px;">Keep pushing your limits!<br/><strong>${CONFIG.GYM_NAME} Team</strong></p>
+  `;
+
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+      <div style="background-color: #dc2626; padding: 20px; text-align: center; color: #ffffff;">
+        <h2 style="margin: 0;">${CONFIG.GYM_NAME}</h2>
+        <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">WELCOME TO THE GYM COMMUNITY</p>
+      </div>
+      <div style="padding: 24px; color: #333333; line-height: 1.6;">
+        ${content}
+      </div>
+      <div style="background-color: #f8fafc; padding: 12px; text-align: center; font-size: 12px; color: #64748b;">
+        © 2026 ${CONFIG.GYM_NAME}. Admin: ${CONFIG.ADMIN_EMAIL}
+      </div>
+    </div>
+  `;
+
+  return { subject: subject, htmlBody: htmlBody };
+}
+
+function sendWelcomeEmail(toEmail, name, memberId, plan, expiryDate) {
+  const mailObj = generateWelcomeEmailTemplate(name, memberId, plan, expiryDate);
+  sendGmail(toEmail, mailObj.subject, mailObj.htmlBody);
+  Logger.log('SUCCESS: Welcome email sent to ' + toEmail);
+}
+
 // ==============================================================================
 // UTILITIES
 // ==============================================================================

@@ -146,6 +146,24 @@ export const saveReminders = (reminders) => {
   localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
 };
 
+// Log welcome email dispatch to reminder ledger
+export const logWelcomeEmail = (member) => {
+  const reminders = getReminders();
+  const newLog = {
+    id: `REM-${101 + reminders.length}`,
+    clientName: member.fullName,
+    phone: member.phone || '',
+    email: member.email || '',
+    date: new Date().toISOString().split('T')[0],
+    type: 'Email',
+    status: 'Sent',
+    message: `[Welcome Message] Welcome to Phoenix Fitness Centre sent to ${member.email || member.fullName}`
+  };
+  const updated = [newLog, ...reminders];
+  saveReminders(updated);
+  return newLog;
+};
+
 // Seed utility to fully initialize all stores on application mount and sync database version
 export const initializeDb = () => {
   const currentVersion = localStorage.getItem('phoenix_gym_db_ver');

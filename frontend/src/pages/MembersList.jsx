@@ -19,7 +19,7 @@ import {
   Briefcase
 } from 'lucide-react';
 
-export default function MembersList({ members, onDeleteMember, onToggleStatus, onEditMember, setPage }) {
+export default function MembersList({ members, onDeleteMember, onToggleStatus, onEditMember, onSendWelcomeEmail, setPage }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchField, setSearchField] = useState('all'); // all, name, id, phone, village
   const [statusFilter, setStatusFilter] = useState('all'); // all, active, inactive, expiring, pending
@@ -274,6 +274,17 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                             <Edit3 className="w-4 h-4" />
                           </button>
                           
+                          {/* Send Welcome Email button */}
+                          {member.email && (
+                            <button
+                              onClick={() => onSendWelcomeEmail && onSendWelcomeEmail(member)}
+                              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-zinc-900 rounded-lg transition-all cursor-pointer"
+                              title="Send Welcome Email"
+                            >
+                              <Mail className="w-4 h-4" />
+                            </button>
+                          )}
+
                           {/* Delete button */}
                           <button
                             onClick={() => onDeleteMember(member.id)}
@@ -389,20 +400,34 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
             </div>
 
             {/* Modal Actions */}
-            <div className="flex justify-between items-center border-t border-zinc-900 pt-4">
-              <button
-                onClick={() => {
-                  const m = viewingMember;
-                  setViewingMember(null);
-                  onEditMember(m);
-                }}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
-              >
-                <Edit3 className="w-4 h-4" /> Edit Profile
-              </button>
+            <div className="flex flex-wrap justify-between items-center gap-2 border-t border-zinc-900 pt-4">
+              <div className="flex items-center gap-2">
+                {viewingMember.email && (
+                  <button
+                    onClick={() => {
+                      const m = viewingMember;
+                      setViewingMember(null);
+                      if (onSendWelcomeEmail) onSendWelcomeEmail(m);
+                    }}
+                    className="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-red-950/30"
+                  >
+                    <Mail className="w-4 h-4" /> Send Welcome Email
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    const m = viewingMember;
+                    setViewingMember(null);
+                    onEditMember(m);
+                  }}
+                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Edit3 className="w-4 h-4" /> Edit Profile
+                </button>
+              </div>
               <button
                 onClick={() => setViewingMember(null)}
-                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-slate-300 font-bold rounded-xl transition-all cursor-pointer"
+                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
                 Close Window
               </button>

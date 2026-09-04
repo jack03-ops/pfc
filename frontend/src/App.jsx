@@ -8,6 +8,7 @@ import Payments from './pages/Payments';
 import Reports from './pages/Reports';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
+import WelcomeEmailModal from './components/WelcomeEmailModal';
 import { CheckCircle2 } from 'lucide-react';
 import { 
   getMembers, 
@@ -23,6 +24,7 @@ export default function App() {
   const [members, setMembers] = useState([]);
   const [payments, setPayments] = useState([]);
   const [memberToEdit, setMemberToEdit] = useState(null);
+  const [welcomeMember, setWelcomeMember] = useState(null);
   const [toast, setToast] = useState(null);
 
   const showToast = (message, type = 'success') => {
@@ -38,10 +40,10 @@ export default function App() {
     setMembers(getMembers());
     setPayments(getPayments());
 
-    // Check if session exists in localStorage for convenience
-    const session = localStorage.getItem('phoenix_gym_session');
-    if (session) {
-      setUser(JSON.parse(session));
+    // Auto login check
+    const savedUser = localStorage.getItem('phoenix_gym_session');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
     }
   }, []);
 
@@ -56,7 +58,7 @@ export default function App() {
   };
 
   // Add & Update Member Handler
-  const handleSaveMember = (formData) => {
+  const handleSaveMember = (formData, options = {}) => {
     let updatedMembers = [];
     if (formData.id) {
       // Editing
@@ -75,7 +77,7 @@ export default function App() {
           id: txnId,
           clientId: newId,
           clientName: formData.fullName,
-          amount: 1000, // base default fallback
+          amount: formData.amountPaid ? Number(formData.amountPaid) : 1000,
           date: formData.startDate,
           plan: formData.plan,
           method: 'UPI'
@@ -83,6 +85,11 @@ export default function App() {
         const updatedPayments = [...payments, newTxn];
         setPayments(updatedPayments);
         savePayments(updatedPayments);
+      }
+
+      // Automatically trigger Welcome Email modal if enabled or email exists
+      if (options.sendWelcomeEmail || (newMember.email && newMember.email.trim())) {
+        setWelcomeMember(newMember);
       }
     }
     
@@ -170,6 +177,7 @@ export default function App() {
             onDeleteMember={handleDeleteMember} 
             onToggleStatus={handleToggleStatus} 
             onEditMember={handleEditMemberTrigger}
+            onSendWelcomeEmail={(m) => setWelcomeMember(m)}
             setPage={setCurrentPage} 
           />
         );
@@ -255,6 +263,15 @@ export default function App() {
           {renderPage()}
         </main>
       </div>
+
+      {/* Welcome Email Modal */}
+      {welcomeMember && (
+        <WelcomeEmailModal
+          member={welcomeMember}
+          onClose={() => setWelcomeMember(null)}
+          onEmailSent={(m) => showToast(`Welcome email recorded for ${m.fullName}!`, 'success')}
+        />
+      )}
     </div>
   );
 }
