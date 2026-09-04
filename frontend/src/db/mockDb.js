@@ -103,8 +103,47 @@ export const getMembers = () => {
   return JSON.parse(data);
 };
 
+const CLOUD_SYNC_URL = 'https://5pqzjtksdbperly4.public.blob.vercel-storage.com/phoenix_sync.json';
+
+// Fetch live centralized cloud data (shared across phone, laptop, tablet)
+export const fetchFromCloud = async () => {
+  try {
+    const res = await fetch(`${CLOUD_SYNC_URL}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (json && Array.isArray(json.members)) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.members));
+      if (Array.isArray(json.payments)) {
+        localStorage.setItem(PAYMENTS_KEY, JSON.stringify(json.payments));
+      }
+      return json;
+    }
+  } catch (err) {
+    console.warn('[Cloud Sync Fetch Warning]', err.message);
+  }
+  return null;
+};
+
+// Push live centralized cloud data (shared across phone, laptop, tablet)
+export const syncToCloud = async (members, payments) => {
+  try {
+    await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        members: members || getMembers(),
+        payments: payments || getPayments(),
+        updatedAt: new Date().toISOString()
+      })
+    });
+  } catch (err) {
+    console.warn('[Cloud Sync Push Warning]', err.message);
+  }
+};
+
 export const saveMembers = (members) => {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(members));
+  syncToCloud(members, getPayments());
 };
 
 export const getSettings = () => {
@@ -131,6 +170,7 @@ export const getPayments = () => {
 
 export const savePayments = (payments) => {
   localStorage.setItem(PAYMENTS_KEY, JSON.stringify(payments));
+  syncToCloud(getMembers(), payments);
 };
 
 export const getReminders = () => {

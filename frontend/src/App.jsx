@@ -15,7 +15,8 @@ import {
   saveMembers, 
   getPayments, 
   savePayments, 
-  initializeDb 
+  initializeDb,
+  fetchFromCloud
 } from './db/mockDb';
 
 export default function App() {
@@ -34,7 +35,7 @@ export default function App() {
     }, 4000);
   };
 
-  // Initialize DB and load state
+  // Initialize DB, load state, and sync with centralized cloud database
   useEffect(() => {
     initializeDb();
     setMembers(getMembers());
@@ -45,6 +46,33 @@ export default function App() {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+
+    const syncLiveCloud = () => {
+      fetchFromCloud().then(data => {
+        if (data) {
+          if (Array.isArray(data.members) && data.members.length > 0) {
+            setMembers(data.members);
+          }
+          if (Array.isArray(data.payments) && data.payments.length > 0) {
+            setPayments(data.payments);
+          }
+        }
+      });
+    };
+
+    // 1. Initial live cloud sync
+    syncLiveCloud();
+
+    // 2. Real-time sync when switching between phone and laptop windows
+    window.addEventListener('focus', syncLiveCloud);
+
+    // 3. Periodic cloud poll every 6 seconds
+    const interval = setInterval(syncLiveCloud, 6000);
+
+    return () => {
+      window.removeEventListener('focus', syncLiveCloud);
+      clearInterval(interval);
+    };
   }, []);
 
   const handleLoginSuccess = (userData) => {

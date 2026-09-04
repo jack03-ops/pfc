@@ -15,6 +15,7 @@ import memberRoutes from './routes/memberRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import syncRoutes from './routes/syncRoutes.js';
 
 // Init env setup
 dotenv.config();
@@ -91,6 +92,7 @@ app.use('/api/members', memberRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/sync', syncRoutes);
 
 // Base Status Route
 app.get('/health', (req, res) => {
