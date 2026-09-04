@@ -288,6 +288,19 @@ function sendWelcomeEmail(toEmail, name, memberId, plan, expiryDate) {
   Logger.log('SUCCESS: Welcome email sent to ' + toEmail);
 }
 
+function sendWelcomeEmailWithPdf(toEmail, name, memberId, plan, expiryDate) {
+  const mailObj = generateWelcomeEmailTemplate(name, memberId, plan, expiryDate);
+  const pdfBlob = Utilities.newBlob(mailObj.htmlBody, 'text/html')
+                           .getAs('application/pdf')
+                           .setName('Phoenix_Invoice_' + (memberId || '1001') + '.pdf');
+  
+  GmailApp.sendEmail(toEmail, mailObj.subject, 'Please find attached your official Phoenix Fitness Centre membership receipt & tax invoice.', {
+    htmlBody: mailObj.htmlBody,
+    attachments: [pdfBlob]
+  });
+  Logger.log('SUCCESS: Welcome email with attached PDF invoice sent to ' + toEmail);
+}
+
 // ==============================================================================
 // UTILITIES
 // ==============================================================================

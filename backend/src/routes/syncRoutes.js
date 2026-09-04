@@ -50,4 +50,20 @@ router.post('/', async (req, res) => {
   }
 });
 
+// POST /api/sync/welcome-email - Send official welcome email with PDF invoice attached
+router.post('/welcome-email', async (req, res) => {
+  try {
+    const { sendWelcomeEmail } = await import('../services/emailService.js');
+    const member = req.body;
+    if (!member || !member.email) {
+      return res.status(400).json({ success: false, message: 'Member email is required.' });
+    }
+    const result = await sendWelcomeEmail(member);
+    return res.status(200).json({ success: true, message: 'Welcome email with PDF invoice attachment sent successfully!', details: result });
+  } catch (err) {
+    console.error('[Welcome Email API Error]', err.message);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 export default router;
