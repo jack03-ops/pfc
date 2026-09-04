@@ -30,25 +30,80 @@ export const sendExpiryEmail = async (member, daysLeft) => {
 
 export const buildWelcomeEmail = (member) => {
   const expiryDate = member.endDate ? formatDate(new Date(member.endDate)) : 'Upcoming';
-  const subject = `🏋️ Welcome to ${GYM_NAME} - ${member.fullName}!`;
-  const text = `Hi ${member.fullName}, welcome to ${GYM_NAME}! We are thrilled to welcome you to our fitness family. Your membership (Plan: ${member.plan || 'Monthly'}, Expiry: ${expiryDate}) is now active. Operating Hours: Mon - Sat 5:00 AM - 10:00 PM. Keep pushing your limits!`;
+  const clientId = member.clientId || member.id || 'PXM-1001';
+  const invoiceNo = `PFC-INV-${clientId.replace(/\D/g, '') || '101'}`;
+  const amountPaid = member.amountPaid ? Number(member.amountPaid) : 1000;
+  const plan = member.plan || 'Monthly';
+  const todayFormatted = formatDate(new Date());
+
+  const subject = `🏋️ Welcome to ${GYM_NAME} & Official Payment Receipt - ${member.fullName}!`;
+  const text = `Hi ${member.fullName}, welcome to ${GYM_NAME}! Official Invoice ${invoiceNo}: Status PAID & VERIFIED. Plan: ${plan}, Amount Paid: ₹${amountPaid}. Expiry Date: ${expiryDate}. Gym Timings: Mon - Sat 5:00 AM - 10:00 PM. Keep pushing your limits!`;
+  
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1f2937;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+      <!-- Header Banner -->
       <div style="background:#b91c1c;color:#fff;padding:24px;text-align:center">
-        <h2 style="margin:0;text-transform:uppercase">${GYM_NAME}</h2>
-        <p style="margin:6px 0 0 0;font-size:13px;opacity:0.9">Welcome to the Fitness Community!</p>
+        <h2 style="margin:0;text-transform:uppercase;letter-spacing:1px">${GYM_NAME}</h2>
+        <p style="margin:6px 0 0 0;font-size:13px;opacity:0.9">Official Payment Receipt & Tax Invoice</p>
       </div>
+
       <div style="padding:24px;line-height:1.6">
         <p>Hi <strong>${escapeHtml(member.fullName)}</strong>,</p>
         <p>Welcome to <strong>${GYM_NAME}</strong>! 💪 We are excited to guide and support you on your fitness journey.</p>
-        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin:16px 0">
-          <p style="margin:0 0 6px 0"><strong>Client ID:</strong> ${member.clientId || member.id || 'PXM-1001'}</p>
-          <p style="margin:0 0 6px 0"><strong>Plan:</strong> ${member.plan || 'Monthly'}</p>
-          <p style="margin:0 0 6px 0"><strong>Expiry Date:</strong> ${expiryDate}</p>
-          <p style="margin:0"><strong>Gym Timings:</strong> Mon – Sat: 5:00 AM – 10:00 PM</p>
+        
+        <!-- Official Tax Invoice Card -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin:18px 0">
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding-bottom:10px;margin-bottom:12px">
+            <div>
+              <span style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:bold;display:block">INVOICE NO</span>
+              <strong style="color:#0f172a;font-size:14px">${invoiceNo}</strong>
+            </div>
+            <div style="text-align:right">
+              <span style="background:#dcfce7;color:#15803d;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:bold">
+                ✓ PAID &amp; VERIFIED
+              </span>
+              <span style="display:block;font-size:11px;color:#64748b;margin-top:2px">Date: ${todayFormatted}</span>
+            </div>
+          </div>
+
+          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:12px">
+            <thead>
+              <tr style="background:#f1f5f9;color:#475569;text-align:left">
+                <th style="padding:8px 10px">Description</th>
+                <th style="padding:8px 10px;text-align:center">Duration</th>
+                <th style="padding:8px 10px;text-align:center">Tax / GST</th>
+                <th style="padding:8px 10px;text-align:right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:10px">
+                  <strong>Gym Membership Fee (${plan})</strong><br/>
+                  <span style="font-size:10px;color:#64748b">Full gym floor &amp; machine access</span>
+                </td>
+                <td style="padding:10px;text-align:center">${plan}</td>
+                <td style="padding:10px;text-align:center;color:#16a34a;font-weight:bold">Included (0%)</td>
+                <td style="padding:10px;text-align:right;font-weight:bold;font-size:13px">₹${amountPaid.toLocaleString('en-IN')}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="background:#fef2f2;border:1px solid #fecaca;padding:10px 14px;border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:bold;color:#b91c1c;text-transform:uppercase">TOTAL AMOUNT RECEIVED</span>
+            <span style="font-size:16px;font-weight:900;color:#991b1b">₹${amountPaid.toLocaleString('en-IN')}</span>
+          </div>
         </div>
-        <p>If you have any questions or need trainer assistance, please visit the reception desk or call us at <strong>+91 9487817301</strong>.</p>
-        <p style="margin-top:24px">Keep Pushing Your Limits,<br><strong>${GYM_NAME} Team</strong></p>
+
+        <!-- Membership Guidelines -->
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:16px;font-size:12px">
+          <p style="margin:0 0 6px 0"><strong>Client ID:</strong> ${clientId}</p>
+          <p style="margin:0 0 6px 0"><strong>Membership Expiry:</strong> ${expiryDate}</p>
+          <p style="margin:0 0 6px 0"><strong>Gym Timings:</strong> Mon – Sat: 5:00 AM – 10:00 PM</p>
+          <p style="margin:0"><strong>Emergency &amp; Desk Contact:</strong> +91 9487817301</p>
+        </div>
+
+        <p style="font-size:12px;color:#64748b">Please retain this digital receipt for your subscription records.</p>
+        <p style="margin-top:20px">Keep Pushing Your Limits,<br/><strong>${GYM_NAME} Team</strong></p>
       </div>
     </div>
   `;
