@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { Mail, CheckCircle2, Copy, X, Send, Sparkles, Printer, FileText, ShieldCheck, Download } from 'lucide-react';
+import { Mail, CheckCircle2, Copy, X, Send, Sparkles, Printer, FileText, ShieldCheck, Download, Paperclip, Loader2, AlertCircle } from 'lucide-react';
 import { logWelcomeEmail } from '../db/mockDb';
+import { downloadInvoicePdf } from '../utils/pdfGenerator';
 import phoenixLogo from '../assets/phoenix_logo.png';
 
 export default function WelcomeEmailModal({ member, onClose, onEmailSent }) {
   const [activeTab, setActiveTab] = useState('email'); // 'email' | 'invoice'
   const [sent, setSent] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  const [sendingServer, setSendingServer] = useState(false);
+  const [serverStatus, setServerStatus] = useState(null);
 
   if (!member) return null;
 
@@ -22,12 +26,16 @@ export default function WelcomeEmailModal({ member, onClose, onEmailSent }) {
   const invoiceNo = `PFC-INV-${clientId.replace(/\D/g, '') || '101'}`;
   const amountPaid = member.amountPaid ? Number(member.amountPaid) : 1000;
   const paymentMethod = 'UPI';
+  const pdfFileName = `Phoenix_Invoice_${invoiceNo}.pdf`;
 
   const emailSubject = `🏋️ Welcome to ${gymName} & Official Payment Receipt - ${clientName}!`;
 
   const emailBodyText = `Hi ${clientName},
 
 Welcome to ${gymName}! 💪 We are thrilled to welcome you to our fitness family.
+
+Please find attached your official Membership Payment Receipt & Tax Invoice:
+📎 Attached File: ${pdfFileName}
 
 ==================================================
 📄 OFFICIAL PAYMENT RECEIPT & TAX INVOICE
@@ -69,17 +77,53 @@ Keep pushing your limits!
 Best regards,
 ${gymName} Team`;
 
-  const handleSendEmail = () => {
-    // 1. Log to mock database reminders
-    logWelcomeEmail(member);
-    
-    // 2. Open pre-composed email client
-    const mailtoUrl = `mailto:${encodeURIComponent(clientEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
-    window.open(mailtoUrl, '_blank');
+  // 1-Click Real PDF Download
+  const handleDownloadPdf = () => {
+    downloadInvoicePdf({
+      invoiceNo,
+      clientName,
+      clientId,
+      plan: planName,
+      amount: amountPaid,
+      date: startDate,
+      phone: member.phone,
+      address: member.village
+    });
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 4000);
+  };
 
-    setSent(true);
-    if (onEmailSent) {
-      onEmailSent(member);
+  // Direct Server Delivery with PDF Attached (Fallback to downloading file + Gmail)
+  const handleSendEmailWithPdf = async () => {
+    setSendingServer(true);
+    setServerStatus(null);
+    try {
+      const res = await fetch('/api/sync/welcome-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(member)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setServerStatus({ ok: true, msg: `Official PDF invoice attached and emailed to ${clientEmail}!` });
+        setSent(true);
+        if (onEmailSent) onEmailSent(member);
+      } else {
+        throw new Error(data.message || 'SMTP offline');
+      }
+    } catch (err) {
+      // Fallback: Download actual PDF file to user device and open Gmail compose
+      handleDownloadPdf();
+      const mailtoUrl = `mailto:${encodeURIComponent(clientEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBodyText)}`;
+      window.open(mailtoUrl, '_blank');
+      setServerStatus({
+        ok: true,
+        msg: `PDF invoice file downloaded (${pdfFileName})! Pre-composed email opened ready to send.`
+      });
+      setSent(true);
+      if (onEmailSent) onEmailSent(member);
+    } finally {
+      setSendingServer(false);
     }
   };
 
@@ -105,11 +149,11 @@ ${gymName} Team`;
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-1.5">
-                <span>Welcome Message & Invoice</span>
+                <span>Welcome Email & PDF Invoice</span>
                 <Sparkles className="w-4 h-4 text-amber-400" />
               </h3>
               <p className="text-[11px] text-zinc-400">
-                Onboarding & Payment Receipt for <span className="text-slate-200 font-semibold">{clientName}</span>
+                Official document for <span className="text-slate-200 font-semibold">{clientName}</span> ({clientEmail})
               </p>
             </div>
           </div>
@@ -148,10 +192,21 @@ ${gymName} Team`;
 
         {/* Content Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
-          {sent && (
-            <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center gap-3 text-emerald-400 text-xs font-semibold print:hidden">
-              <CheckCircle2 className="w-5 h-5 shrink-0" />
-              <span>Welcome email & invoice dispatched successfully!</span>
+          {/* Real PDF Download feedback */}
+          {downloaded && (
+            <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-3 text-amber-300 text-xs font-semibold print:hidden animate-in fade-in">
+              <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />
+              <span>Downloaded file: <strong>{pdfFileName}</strong> to your device!</span>
+            </div>
+          )}
+
+          {/* Server Dispatch / Fallback status */}
+          {serverStatus && (
+            <div className={`p-3.5 rounded-2xl flex items-center gap-3 text-xs font-semibold print:hidden animate-in fade-in ${
+              serverStatus.ok ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border border-rose-500/30 text-rose-300'
+            }`}>
+              {serverStatus.ok ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" /> : <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}
+              <span>{serverStatus.msg}</span>
             </div>
           )}
 
@@ -165,17 +220,44 @@ ${gymName} Team`;
                   <span className="text-white font-semibold truncate block">{clientName}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 block uppercase text-[9px] font-bold">Target Email</span>
-                  <span className="text-red-400 font-semibold truncate block">{clientEmail}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block uppercase text-[9px] font-bold">Invoice No</span>
-                  <span className="text-emerald-400 font-bold block">{invoiceNo}</span>
+                  <span className="text-zinc-500 block uppercase text-[9px] font-bold">Plan</span>
+                  <span className="text-white font-semibold block">{planName}</span>
                 </div>
                 <div>
                   <span className="text-zinc-500 block uppercase text-[9px] font-bold">Amount Paid</span>
-                  <span className="text-white font-bold block">₹{amountPaid.toLocaleString('en-IN')}</span>
+                  <span className="text-emerald-400 font-bold block">₹{amountPaid.toLocaleString('en-IN')}</span>
                 </div>
+                <div>
+                  <span className="text-zinc-500 block uppercase text-[9px] font-bold">Invoice Ref</span>
+                  <span className="text-white font-bold block">{invoiceNo}</span>
+                </div>
+              </div>
+
+              {/* ATTACHED PDF FILE CARD */}
+              <div className="p-3 bg-zinc-900/90 border border-red-500/30 rounded-2xl flex items-center justify-between gap-3 shadow-inner">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2.5 bg-red-600/20 text-red-400 rounded-xl border border-red-500/30 shrink-0">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-bold text-white truncate">{pdfFileName}</p>
+                      <span className="bg-red-500/20 text-red-300 text-[9px] px-2 py-0.2 rounded-full font-extrabold uppercase shrink-0">
+                        ATTACHED FILE (.PDF)
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-zinc-400 truncate">Official Tax Invoice &amp; Payment Receipt Document</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleDownloadPdf}
+                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 text-xs font-bold rounded-xl border border-zinc-700/80 flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-sm hover:border-amber-400"
+                  title="Download actual .pdf file"
+                >
+                  <Download className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Save PDF File</span>
+                </button>
               </div>
 
               {/* Email Content Box */}
@@ -189,30 +271,36 @@ ${gymName} Team`;
                 
                 <div className="p-4 text-xs text-zinc-300 leading-relaxed space-y-3 max-h-72 overflow-y-auto font-sans">
                   <p className="font-semibold text-white">Hi {clientName},</p>
-                  <p>Welcome to <strong>{gymName}</strong>! 💪 We are thrilled to welcome you to our fitness family.</p>
+                  <p>Welcome to <strong>{gymName}</strong>! 💪 We are excited to partner with you on your fitness journey.</p>
                   
-                  {/* Embedded Official Tax Invoice Card */}
+                  {/* File Attachment Notification inside email body */}
+                  <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-center gap-2 text-[11px] text-emerald-300 font-semibold">
+                    <Paperclip className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Attached Document: <strong>{pdfFileName}</strong> (Official Receipt)</span>
+                  </div>
+
+                  {/* Embedded Receipt Card */}
                   <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800/90 space-y-2">
                     <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
                       <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
                         <ShieldCheck className="w-4 h-4" />
-                        <span>OFFICIAL PAYMENT RECEIPT & TAX INVOICE</span>
+                        <span>PAYMENT RECEIPT &amp; TAX INVOICE</span>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">
-                        PAID & VERIFIED
+                      <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                        PAID &amp; VERIFIED
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
                       <div>
-                        <p className="text-zinc-500">Invoice Number: <strong className="text-white">{invoiceNo}</strong></p>
+                        <p className="text-zinc-500">Invoice No: <strong className="text-white">{invoiceNo}</strong></p>
+                        <p className="text-zinc-500">Date: <strong className="text-white">{startDate}</strong></p>
                         <p className="text-zinc-500">Billed To: <strong className="text-white">{clientName}</strong> ({clientId})</p>
-                        <p className="text-zinc-500">Payment Date: <strong className="text-white">{startDate}</strong></p>
                       </div>
                       <div className="text-right">
                         <p className="text-zinc-500">Payment Mode: <strong className="text-emerald-400 font-bold">{paymentMethod}</strong></p>
-                        <p className="text-zinc-500">Plan Duration: <strong className="text-white">{planName} Plan</strong></p>
                         <p className="text-zinc-500">Tax / GST: <strong className="text-emerald-400 font-bold">Included (0%)</strong></p>
+                        <p className="text-zinc-500">Subscription: <strong className="text-white">{planName} Plan</strong></p>
                       </div>
                     </div>
 
@@ -221,25 +309,6 @@ ${gymName} Team`;
                       <span className="text-sm font-extrabold text-white">₹{amountPaid.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
-
-                  <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-1 text-[11px]">
-                    <p>• <strong>Member ID:</strong> {clientId}</p>
-                    <p>• <strong>Plan:</strong> {planName}</p>
-                    <p>• <strong>Start Date:</strong> {startDate}</p>
-                    <p>• <strong>Expiry Date:</strong> {endDate}</p>
-                    <p>• <strong>Status:</strong> Active</p>
-                  </div>
-
-                  <div className="space-y-1 text-[11px] text-zinc-400">
-                    <p className="text-zinc-300 font-semibold">Gym Highlights & Timings:</p>
-                    <p>• Operating Hours: Mon – Sat (5:00 AM – 10:00 PM)</p>
-                    <p>• Strength, Cardio, Crossfit & Free Weights</p>
-                    <p>• Certified Trainers available on floor</p>
-                  </div>
-
-                  <p className="text-[11px] text-slate-400">
-                    For questions or workout advice, reach our reception desk at {contactPhone}.
-                  </p>
 
                   <p className="font-bold text-red-400 pt-1">
                     Keep pushing your limits!<br />
@@ -250,20 +319,29 @@ ${gymName} Team`;
             </div>
           )}
 
-          {/* TAB 2: PRINTABLE OFFICIAL TAX INVOICE */}
+          {/* TAB 2: PRINTABLE INVOICE VIEW */}
           {activeTab === 'invoice' && (
             <div className="space-y-4">
               <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-between text-xs print:hidden">
                 <span className="text-red-300 font-semibold">
-                  Official Printable Receipt & Tax Invoice for <strong>{clientName}</strong>
+                  Official Document: <strong>{pdfFileName}</strong>
                 </span>
-                <button
-                  onClick={handlePrintPdf}
-                  className="px-3 py-1.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white font-bold rounded-lg shadow-md transition-all flex items-center gap-1.5 cursor-pointer text-xs"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Download PDF / Print</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleDownloadPdf}
+                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold rounded-lg shadow-md transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download .PDF File</span>
+                  </button>
+                  <button
+                    onClick={handlePrintPdf}
+                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-lg border border-zinc-700 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Print</span>
+                  </button>
+                </div>
               </div>
 
               {/* Printable Invoice Container */}
@@ -290,13 +368,13 @@ ${gymName} Team`;
                     <img src={phoenixLogo} alt="Phoenix Logo" className="w-12 h-12 object-contain" />
                     <div>
                       <h1 className="text-lg font-black text-white tracking-tight uppercase">PHOENIX FITNESS CENTRE</h1>
-                      <p className="text-[11px] text-zinc-400 font-semibold">Modern Gym & Personal Fitness Academy</p>
+                      <p className="text-[11px] text-zinc-400 font-semibold">Modern Gym &amp; Personal Fitness Academy</p>
                       <p className="text-[10px] text-zinc-500">Contact: +91 9487817301 | phoenixgym.vkp@gmail.com</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-black uppercase tracking-wider mb-1.5">
-                      <CheckCircle2 className="w-3 h-3" /> PAID & VERIFIED
+                    <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider mb-1.5">
+                      <ShieldCheck className="w-3 h-3" /> PAID &amp; VERIFIED
                     </span>
                     <p className="text-xs font-bold text-white">{invoiceNo}</p>
                     <p className="text-[10px] text-zinc-400">Date: {startDate}</p>
@@ -314,8 +392,8 @@ ${gymName} Team`;
                   </div>
                   <div className="text-right">
                     <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1">PAYMENT METRICS</p>
-                    <p className="text-zinc-400">Payment Mode: <strong className="text-emerald-400">{paymentMethod}</strong></p>
-                    <p className="text-zinc-400">Billing Period: <strong className="text-white">{planName} Plan</strong></p>
+                    <p className="text-zinc-400">Mode: <strong className="text-emerald-400">{paymentMethod}</strong></p>
+                    <p className="text-zinc-400">Plan: <strong className="text-white">{planName} Plan</strong></p>
                     <p className="text-zinc-400">Issued By: <strong className="text-white">Phoenix Admin Desk</strong></p>
                   </div>
                 </div>
@@ -335,7 +413,7 @@ ${gymName} Team`;
                       <tr>
                         <td className="p-3 pl-3 font-bold text-white">
                           Gym Membership Fee ({planName})
-                          <span className="block text-[10px] text-zinc-500 font-normal">Full gym floor & equipment access</span>
+                          <span className="block text-[10px] text-zinc-500 font-normal">Full gym floor &amp; equipment access</span>
                         </td>
                         <td className="p-3 text-center">{planName}</td>
                         <td className="p-3 text-center text-emerald-400">Included (0%)</td>
@@ -370,12 +448,12 @@ ${gymName} Team`;
             </button>
 
             <button
-              onClick={handlePrintPdf}
-              className="px-3.5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-300 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer flex-1 sm:flex-initial"
-              title="Download or Print PDF Receipt"
+              onClick={handleDownloadPdf}
+              className="px-3.5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-amber-300 text-xs font-bold rounded-xl border border-zinc-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer flex-1 sm:flex-initial"
+              title="Download actual .pdf invoice file"
             >
-              <Printer className="w-4 h-4 text-amber-400" />
-              <span>Download PDF</span>
+              <Download className="w-4 h-4 text-amber-400" />
+              <span>Download PDF File</span>
             </button>
           </div>
 
@@ -387,11 +465,12 @@ ${gymName} Team`;
               Close
             </button>
             <button
-              onClick={handleSendEmail}
-              className="w-1/2 sm:w-auto px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              onClick={handleSendEmailWithPdf}
+              disabled={sendingServer}
+              className="w-1/2 sm:w-auto px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              <Send className="w-4 h-4" />
-              <span>{sent ? 'Send Again' : 'Send Welcome Email'}</span>
+              {sendingServer ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span>{sendingServer ? 'Attaching & Sending...' : sent ? 'Send Again' : 'Send with PDF Attached'}</span>
             </button>
           </div>
         </div>
