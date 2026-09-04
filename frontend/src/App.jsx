@@ -162,6 +162,13 @@ export default function App() {
     showToast(`✅ ${reminderType} recorded & marked as sent today for ${member.fullName}!`, 'success');
   };
 
+  const handleWhatsAppReminderSent = (member, daysLeft) => {
+    const reminderType = `${daysLeft || 3}-Day WhatsApp Reminder`;
+    const updated = recordMemberReminder(member.id, reminderType);
+    setMembers(updated);
+    showToast(`✅ Web WhatsApp reminder recorded for ${member.fullName}!`, 'success');
+  };
+
   const handleWelcomeEmailSent = (member) => {
     const updated = recordMemberWelcomeEmail(member.id);
     setMembers(updated);
@@ -262,6 +269,7 @@ export default function App() {
             payments={payments} 
             onMarkAsPaid={handleMarkAsPaid} 
             onSendReminderEmail={(m, daysLeft) => setReminderMemberData({ member: m, daysLeft })}
+            onSendWhatsAppReminder={handleWhatsAppReminderSent}
             setPage={setCurrentPage} 
           />
         );

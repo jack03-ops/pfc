@@ -11,7 +11,7 @@ import {
   Clock
 } from 'lucide-react';
 
-export default function Notifications({ members, payments, onMarkAsPaid, onSendReminderEmail, setPage }) {
+export default function Notifications({ members, payments, onMarkAsPaid, onSendReminderEmail, onSendWhatsAppReminder, setPage }) {
   // Compute alerts dynamically from Mock DB
   const alertsList = useMemo(() => {
     const list = [];
@@ -69,11 +69,39 @@ export default function Notifications({ members, payments, onMarkAsPaid, onSendR
     return list.slice(0, 8); // Top 8 relevant notifications
   }, [members]);
 
-  const handleWhatsAppAlert = (member) => {
-    const text = `Hello ${member.fullName}, this is a friendly reminder from Phoenix Gym that your membership plan (${member.plan}) ends on ${member.endDate}. Please renew on time to avoid interruption!`;
+  const handleWhatsAppAlert = (member, daysLeft) => {
+    const rawPhone = member.whatsapp || member.phone || '';
+    const cleanPhone = String(rawPhone).replace(/\D/g, '').replace(/^91/, '');
+    if (!cleanPhone) {
+      alert(`No WhatsApp phone number registered for ${member.fullName}`);
+      return;
+    }
+
+    let text = '';
+    const isFinal = daysLeft === 1;
+    const isThreeDay = daysLeft === 3;
+    const renewalAmount = member.amountPaid ? Number(member.amountPaid) : 1000;
+
+    if (isFinal) {
+      text = `🚨 *URGENT MEMBERSHIP EXPIRY NOTICE - PHOENIX FITNESS CENTRE* 🚨\n\nHello *${member.fullName}*,\n\nThis is an urgent reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires *TOMORROW (${member.endDate})*!\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (Expires Tomorrow)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 9487817301* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 9487817301) to keep your gym access uninterrupted.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 9487817301`;
+    } else if (isThreeDay) {
+      text = `🏋️ *MEMBERSHIP RENEWAL REMINDER - PHOENIX FITNESS CENTRE* 🏋️\n\nHello *${member.fullName}*,\n\nFriendly reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires in *3 days* on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (3 Days Left)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 9487817301* (UPI ID: phoenixgym.vkp@oksbi).\n\nSend payment confirmation to this WhatsApp number (+91 9487817301). We look forward to continuing your fitness journey!\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 9487817301`;
+    } else {
+      text = `Hello *${member.fullName}*, this is a friendly reminder from *Phoenix Fitness Centre* regarding your *${member.plan}* membership ending on *${member.endDate}*. Please renew on time to avoid interruption!\n\nUPI: phoenixgym.vkp@oksbi (+91 9487817301)\n\nThank you,\n*Phoenix Fitness Centre*`;
+    }
+
     const encodedText = encodeURIComponent(text);
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=91${member.phone}&text=${encodedText}`;
+    // On laptop/desktop, open web.whatsapp.com directly. On mobile devices, open api.whatsapp.com
+    const isDesktop = !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const whatsappUrl = isDesktop
+      ? `https://web.whatsapp.com/send?phone=91${cleanPhone}&text=${encodedText}`
+      : `https://api.whatsapp.com/send?phone=91${cleanPhone}&text=${encodedText}`;
+
     window.open(whatsappUrl, '_blank');
+
+    if (onSendWhatsAppReminder) {
+      onSendWhatsAppReminder(member, daysLeft);
+    }
   };
 
   return (
@@ -93,6 +121,7 @@ export default function Notifications({ members, payments, onMarkAsPaid, onSendR
 
             const todayStr = new Date().toISOString().split('T')[0];
             const isReminderSentToday = alert.member?.lastReminderDate === todayStr;
+            const isWhatsAppSentToday = alert.member?.lastReminderDate === todayStr && alert.member?.lastReminderType?.includes('WhatsApp');
 
             return (
               <div key={alert.id} className={`p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
@@ -146,12 +175,16 @@ export default function Notifications({ members, payments, onMarkAsPaid, onSendR
 
                   {/* WhatsApp prompt */}
                   <button
-                    onClick={() => handleWhatsAppAlert(alert.member)}
-                    className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white border border-emerald-500/25 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer"
-                    title="Send alert notice on WhatsApp"
+                    onClick={() => handleWhatsAppAlert(alert.member, alert.daysLeft)}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer border ${
+                      isWhatsAppSentToday
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        : 'bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white border-emerald-500/25'
+                    }`}
+                    title="Send alert notice on Web WhatsApp (+91 9487817301)"
                   >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    WhatsApp
+                    {isWhatsAppSentToday ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <MessageSquare className="w-3.5 h-3.5" />}
+                    <span>{isWhatsAppSentToday ? '✓ WhatsApp (Resend)' : 'Web WhatsApp'}</span>
                   </button>
 
                   {/* Quick Fee collector */}
