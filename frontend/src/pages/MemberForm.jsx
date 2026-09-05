@@ -212,26 +212,25 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 pb-28 md:pb-8">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-60px)] md:max-h-[calc(100vh-80px)]">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-zinc-100 tracking-tight">
+          <h2 className="text-lg font-black uppercase text-white tracking-wide">
             {isEditMode ? 'Modify Member Profile' : 'Enroll New Gym Member'}
           </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">Complete the member details below and click Save Member</p>
+          <p className="text-xs text-zinc-400">Complete the member details below and click Save Member</p>
         </div>
         <button
           onClick={onCancel}
-          className="btn-secondary p-2 rounded-xl text-zinc-400 hover:text-zinc-100 cursor-pointer"
-          title="Cancel"
+          className="p-2 text-slate-400 hover:text-slate-200 bg-zinc-900 border border-zinc-900 rounded-xl transition-all cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
       {formBannerError && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center gap-3 text-rose-300 text-xs font-semibold animate-in fade-in">
+        <div className="p-4 bg-rose-500/15 border border-rose-500/40 rounded-2xl flex items-center gap-3 text-rose-300 text-xs font-bold animate-in fade-in">
           <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
           <span>Please check form: {formBannerError}</span>
         </div>
@@ -244,27 +243,27 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
         <div className="space-y-6 lg:col-span-2">
           
           {/* Section 1: Personal Details */}
-          <div className="card-premium p-5 sm:p-6 space-y-5">
-            <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
+          <div className="glass-panel p-6 rounded-2xl border border-zinc-900 space-y-5">
+            <div className="flex items-center gap-2 border-b border-zinc-900 pb-3">
               <User className="w-4 h-4 text-red-500" />
-              <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">Personal & Contact Details</h3>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Personal & Contact Details</h3>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Phoenix Name */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Full Name *</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Phoenix Name (Full Name) *</label>
                 <input
                   type="text"
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
-                  className={`input-premium w-full text-sm ${errors.fullName ? 'border-rose-500 ring-1 ring-rose-500/30' : ''}`}
+                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
                   placeholder="e.g. Rahul Sharma"
                 />
                 {errors.fullName && (
-                  <div className="text-[11px] text-rose-400 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3.5 h-3.5" />
+                  <div className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
                     {errors.fullName}
                   </div>
                 )}
@@ -273,12 +272,12 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
               {/* Gender & DOB */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Gender</label>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Gender</label>
                   <select
                     name="gender"
                     value={formData.gender}
                     onChange={handleChange}
-                    className="input-premium w-full text-sm"
+                    className="w-full px-3 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-red-500"
                   >
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -286,13 +285,13 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Date of Birth</label>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Date of Birth (DOB)</label>
                   <input
                     type="date"
                     name="dob"
                     value={formData.dob}
                     onChange={handleDobChange}
-                    className="input-premium w-full text-sm"
+                    className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
                   />
                 </div>
               </div>
@@ -300,30 +299,29 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
               {/* Age & Profession */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Age *</label>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Age *</label>
                   <input
                     type="number"
                     name="age"
                     value={formData.age}
                     onChange={handleChange}
-                    className={`input-premium w-full text-sm ${errors.age ? 'border-rose-500 ring-1 ring-rose-500/30' : ''}`}
+                    className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
                     placeholder="24"
                   />
                   {errors.age && (
-                    <div className="text-[11px] text-rose-400 mt-1 flex items-center gap-1 font-medium">
-                      <AlertCircle className="w-3.5 h-3.5" />
+                    <div className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1">
                       {errors.age}
                     </div>
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Profession</label>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Profession</label>
                   <input
                     type="text"
                     name="profession"
                     value={formData.profession}
                     onChange={handleChange}
-                    className="input-premium w-full text-sm"
+                    className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
                     placeholder="e.g. Engineer, Student"
                   />
                 </div>
@@ -331,19 +329,19 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
 
               {/* Phone Number */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Contact No. *</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Contact No. *</label>
                 <input
                   type="text"
                   name="phone"
                   value={formData.phone}
                   onChange={(e) => handlePhoneChange(e, 'phone')}
                   maxLength="14"
-                  className={`input-premium w-full text-sm ${errors.phone ? 'border-rose-500 ring-1 ring-rose-500/30' : ''}`}
-                  placeholder="+91 9876543210"
+                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
+                  placeholder="e.g. +91 9876543210"
                 />
                 {errors.phone && (
-                  <div className="text-[11px] text-rose-400 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3.5 h-3.5" />
+                  <div className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
                     {errors.phone}
                   </div>
                 )}
@@ -351,59 +349,59 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
 
               {/* Emergency Contact No. */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Emergency Contact No.</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Emergency Contact No.</label>
                 <input
                   type="text"
                   name="emergencyContact"
                   value={formData.emergencyContact}
                   onChange={(e) => handlePhoneChange(e, 'emergencyContact')}
                   maxLength="14"
-                  className="input-premium w-full text-sm"
+                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
                   placeholder="Parent / Guardian No."
                 />
               </div>
 
               {/* E-mail Address */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">E-mail Address</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">E-mail Address</label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="input-premium w-full text-sm"
+                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
                   placeholder="client@example.com"
                 />
               </div>
 
               {/* WhatsApp Number */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">WhatsApp Number</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">WhatsApp Number</label>
                 <input
                   type="text"
                   name="whatsapp"
                   value={formData.whatsapp}
                   onChange={(e) => handlePhoneChange(e, 'whatsapp')}
                   maxLength="14"
-                  className="input-premium w-full text-sm"
+                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
                   placeholder="Same as contact or separate"
                 />
               </div>
 
               {/* Village */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Village / Town *</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Village / Town *</label>
                 <input
                   type="text"
                   name="village"
                   value={formData.village}
                   onChange={handleChange}
-                  className={`input-premium w-full text-sm ${errors.village ? 'border-rose-500 ring-1 ring-rose-500/30' : ''}`}
+                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
                   placeholder="Village / Town Name"
                 />
                 {errors.village && (
-                  <div className="text-[11px] text-rose-400 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3.5 h-3.5" />
+                  <div className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
                     {errors.village}
                   </div>
                 )}
@@ -412,75 +410,75 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
 
             {/* Address */}
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Full Address</label>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Address</label>
               <textarea
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
                 rows="2"
-                className="input-premium w-full text-sm resize-none"
-                placeholder="Residential address details..."
+                className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all resize-none"
+                placeholder="Full residential address..."
               />
             </div>
           </div>
 
           {/* Section 2: Physical Metrics & Health Status */}
-          <div className="card-premium p-5 sm:p-6 space-y-5">
-            <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
+          <div className="glass-panel p-6 rounded-2xl border border-zinc-900 space-y-5">
+            <div className="flex items-center gap-2 border-b border-zinc-900 pb-3">
               <Heart className="w-4 h-4 text-rose-500" />
-              <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">Physical Metrics & Health Status</h3>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Physical Metrics & Health Status</h3>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Height (cms) */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Height (cm)</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Height (cms)</label>
                 <input
                   type="number"
                   name="height"
                   value={formData.height}
                   onChange={handleChange}
-                  className="input-premium w-full text-sm"
+                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
                   placeholder="e.g. 175"
                 />
               </div>
 
               {/* Weight (Kgs) */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Weight (kg)</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Weight (Kgs)</label>
                 <input
                   type="number"
                   name="weight"
                   value={formData.weight}
                   onChange={handleChange}
-                  className="input-premium w-full text-sm"
+                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
                   placeholder="e.g. 70"
                 />
               </div>
 
               {/* BMI */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">BMI (Auto-calculated)</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">BMI (Auto-calculated)</label>
                 <input
                   type="text"
                   name="bmi"
                   value={formData.bmi}
-                  readOnly
-                  className="input-premium w-full text-sm text-amber-400 font-bold bg-zinc-900/50 cursor-default"
+                  onChange={handleChange}
+                  className="w-full px-3.5 py-2.5 bg-zinc-950/40 border border-zinc-900/80 rounded-xl text-xs text-amber-400 font-bold focus:outline-none"
                   placeholder="e.g. 22.8"
                 />
               </div>
             </div>
 
             {/* Any Medical condition / Allergic */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Medical Condition / Allergy</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Medical Condition / Allergic</label>
                 <select
                   name="hasMedicalCondition"
                   value={formData.hasMedicalCondition}
                   onChange={handleChange}
-                  className="input-premium w-full text-sm"
+                  className="w-full px-3 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-red-500 font-semibold"
                 >
                   <option value="No">No</option>
                   <option value="Yes">Yes</option>
@@ -488,14 +486,14 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
               </div>
 
               {formData.hasMedicalCondition === 'Yes' && (
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Explain Medical Details</label>
+                <div className="md:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">If Yes, Explain details</label>
                   <input
                     type="text"
                     name="medicalConditionDetails"
                     value={formData.medicalConditionDetails}
                     onChange={handleChange}
-                    className="input-premium w-full text-sm text-rose-300"
+                    className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-rose-300 focus:outline-none focus:border-red-500 transition-all"
                     placeholder="Describe asthma, injury, allergy, or conditions..."
                   />
                 </div>
@@ -507,20 +505,20 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
 
         {/* Right Column: Enrollment & Subscription Info */}
         <div className="space-y-6">
-          <div className="card-premium p-5 sm:p-6 space-y-4">
-            <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
+          <div className="glass-panel p-6 rounded-2xl border border-zinc-900 space-y-4">
+            <div className="flex items-center gap-2 border-b border-zinc-900 pb-3">
               <Dumbbell className="w-4 h-4 text-amber-500" />
-              <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">Gym Enrollment</h3>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Gym Enrollment</h3>
             </div>
 
             {/* Purpose of Joining */}
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Purpose of Joining</label>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Purpose of Joining</label>
               <select
                 name="purposeOfJoining"
                 value={formData.purposeOfJoining}
                 onChange={handleChange}
-                className="input-premium w-full text-sm"
+                className="w-full px-3 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500"
               >
                 <option value="Gain Weight">Gain Weight</option>
                 <option value="Lose Weight">Lose Weight</option>
@@ -533,24 +531,24 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
             {/* Gym Experience & Membership Type */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Gym Experience</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Gym Experience</label>
                 <select
                   name="gymExperience"
                   value={formData.gymExperience}
                   onChange={handleChange}
-                  className="input-premium w-full text-sm"
+                  className="w-full px-3 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-red-500"
                 >
                   <option value="No">No</option>
                   <option value="Yes">Yes</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Type</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Membership Type</label>
                 <select
                   name="membershipType"
                   value={formData.membershipType}
                   onChange={handleChange}
-                  className="input-premium w-full text-sm"
+                  className="w-full px-3 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-red-500"
                 >
                   <option value="New">New</option>
                   <option value="Renewal">Renewal</option>
@@ -560,12 +558,12 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
 
             {/* Membership Plan */}
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Subscription Plan</label>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Subscription Plan</label>
               <select
                 name="plan"
                 value={formData.plan}
                 onChange={handleChange}
-                className="input-premium w-full text-sm font-medium"
+                className="w-full px-3 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 font-semibold"
               >
                 {settings.membershipPlans.map(p => (
                   <option key={p.name} value={p.name}>{p.name} (₹{p.price})</option>
@@ -575,15 +573,15 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
 
             {/* Amount Paid (in Rupees) */}
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Amount Paid (₹)</label>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Amount Paid (in Rupees)</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-bold">₹</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold">₹</span>
                 <input
                   type="number"
                   name="amountPaid"
                   value={formData.amountPaid}
                   onChange={handleChange}
-                  className="input-premium w-full pl-8 text-sm text-emerald-400 font-bold"
+                  className="w-full pl-8 pr-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-emerald-400 font-bold focus:outline-none focus:border-red-500 transition-all"
                   placeholder="1000"
                 />
               </div>
@@ -592,60 +590,60 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
             {/* Start Date & Joining Date */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Joining Date</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Joining Date</label>
                 <input
                   type="date"
                   name="joiningDate"
                   value={formData.joiningDate}
                   onChange={handleChange}
-                  className="input-premium w-full text-xs"
+                  className="w-full px-3 py-2 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Start Date</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Start Date</label>
                 <input
                   type="date"
                   name="startDate"
                   value={formData.startDate}
                   onChange={handleChange}
-                  className="input-premium w-full text-xs"
+                  className="w-full px-3 py-2 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500"
                 />
               </div>
             </div>
 
             {/* Expiry Date */}
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Expiry Date (Auto-calculated)</label>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Expiry Date (Auto-calculated)</label>
               <input
                 type="date"
                 name="endDate"
                 value={formData.endDate}
                 readOnly
-                className="input-premium w-full text-xs text-zinc-400 bg-zinc-900/50 cursor-not-allowed"
+                className="w-full px-3.5 py-2.5 bg-zinc-950/40 border border-zinc-900/80 rounded-xl text-xs text-slate-400 focus:outline-none cursor-not-allowed"
               />
             </div>
 
             {/* Payment & Member Status */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Payment Status</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Payment Status</label>
                 <select
                   name="paymentStatus"
                   value={formData.paymentStatus}
                   onChange={handleChange}
-                  className="input-premium w-full text-sm font-semibold"
+                  className="w-full px-3 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 font-bold"
                 >
                   <option value="Paid">Paid</option>
                   <option value="Pending">Pending</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Member Status</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Member Status</label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="input-premium w-full text-sm font-semibold"
+                  className="w-full px-3 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500"
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
@@ -655,22 +653,22 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
           </div>
 
           {/* Notes & Actions */}
-          <div className="card-premium p-5 sm:p-6 space-y-4">
+          <div className="glass-panel p-6 rounded-2xl border border-zinc-900 space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Personal Fitness Notes</label>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Personal Fitness Notes</label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}
                 rows="2"
-                className="input-premium w-full text-sm resize-none"
+                className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all resize-none"
                 placeholder="Time slot preferences, workout goals, specific notes..."
               />
             </div>
 
             {/* Send Welcome Email Toggle (New enrollments only) */}
             {!isEditMode && (
-              <div className="flex items-center gap-2.5 p-3 bg-zinc-900/40 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors">
+              <div className="flex items-center gap-2.5 p-3 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-zinc-800 transition-all">
                 <input
                   type="checkbox"
                   id="sendWelcomeEmail"
@@ -678,49 +676,30 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
                   onChange={(e) => setSendWelcomeEmail(e.target.checked)}
                   className="w-4 h-4 accent-red-600 rounded cursor-pointer"
                 />
-                <label htmlFor="sendWelcomeEmail" className="text-xs text-zinc-300 font-medium cursor-pointer select-none flex items-center gap-1.5 flex-1">
+                <label htmlFor="sendWelcomeEmail" className="text-xs text-zinc-300 font-semibold cursor-pointer select-none flex items-center gap-1.5 flex-1">
                   <Mail className="w-3.5 h-3.5 text-red-400 shrink-0" />
                   <span>Send Welcome Message to client upon enrollment</span>
                 </label>
               </div>
             )}
 
-            {/* Desktop Action Buttons */}
-            <div className="hidden md:flex gap-3 pt-2">
+            <div className="flex gap-2">
               <button
                 type="button"
                 onClick={onCancel}
-                className="btn-secondary w-1/2 py-2.5 text-xs cursor-pointer text-center"
+                className="w-1/2 py-2.5 bg-zinc-900 border border-zinc-900 text-slate-400 hover:text-slate-200 text-xs font-semibold rounded-xl transition-all cursor-pointer text-center"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="btn-primary w-1/2 py-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-1/2 py-2.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 Save Member
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Mobile Floating Sticky Bottom Action Bar */}
-        <div className="fixed bottom-16 left-0 right-0 p-3 bg-zinc-950/95 border-t border-zinc-800/80 backdrop-blur-md flex items-center gap-3 z-30 md:hidden">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn-secondary flex-1 py-2.5 text-xs cursor-pointer text-center"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="btn-primary flex-1 py-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            Save Member
-          </button>
         </div>
 
       </form>
