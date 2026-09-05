@@ -12,8 +12,8 @@ export default function ReminderEmailModal({ member, daysLeft = 3, onClose, onEm
 
   const isFinal = daysLeft === 1;
   const gymName = "Phoenix Fitness Centre";
-  const contactPhone = "+91 9487817301";
-  const contactEmail = "phoenixfitnesscentre03@gmail.com";
+  const contactPhone = "+91 8015552425";
+  const contactEmail = "phoenixgym.vkp@gmail.com";
   const clientEmail = member.email || 'member@gmail.com';
   const clientName = member.fullName || 'Gym Member';
   const clientId = member.id || 'PXM-1001';
@@ -54,8 +54,8 @@ Gym Operating Hours:
 • Floor Trainers available for workout assistance
 
 How to Renew:
-1. Pay via UPI to +91 9487817301 or at the gym reception desk.
-2. Reply to this email or send a screenshot on WhatsApp: +91 9487817301.
+1. Pay via UPI to +91 8015552425 or at the gym reception desk.
+2. Reply to this email or send a screenshot on WhatsApp: +91 8015552425.
 3. Your membership will be extended immediately!
 
 Thank you for choosing ${gymName}!
@@ -238,7 +238,7 @@ Address: Near Temple, Rampur`;
 
                   <div className="space-y-1 text-[11px] text-zinc-400">
                     <p className="text-zinc-300 font-semibold">Easy Ways to Renew:</p>
-                    <p>1. Pay via UPI to <strong>+91 9487817301</strong> (GooglePay / PhonePe / Paytm)</p>
+                    <p>1. Pay via UPI to <strong>+91 8015552425</strong> (GooglePay / PhonePe / Paytm)</p>
                     <p>2. Or renew in-person at the gym front desk</p>
                     <p>3. Reply to this email or send payment screenshot to confirm</p>
                   </div>
@@ -293,7 +293,7 @@ Address: Near Temple, Rampur`;
                     <div>
                       <h1 className="text-lg font-black text-white tracking-tight uppercase">PHOENIX FITNESS CENTRE</h1>
                       <p className="text-[11px] text-zinc-400 font-semibold">Modern Gym & Personal Fitness Academy</p>
-                      <p className="text-[10px] text-zinc-500">Contact: +91 9487817301 | phoenixgym.vkp@gmail.com</p>
+                      <p className="text-[10px] text-zinc-500">Contact: +91 8015552425 | phoenixgym.vkp@gmail.com</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -314,7 +314,7 @@ Address: Near Temple, Rampur`;
                     <h3 className="font-extrabold text-white text-sm">{clientName}</h3>
                     <p className="text-zinc-400">Member ID: <strong className="text-white">{clientId}</strong></p>
                     <p className="text-zinc-400">Address: {member.village || 'Rampur'}</p>
-                    <p className="text-zinc-400">Phone: {member.phone || '+91 9487817301'}</p>
+                    <p className="text-zinc-400">Phone: {member.phone || '+91 8015552425'}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1">RENEWAL METRICS</p>

@@ -23,7 +23,7 @@ import {
 } from '../components/Charts';
 import { getReminders, saveReminders } from '../db/mockDb';
 
-export default function Dashboard({ members, payments, setPage }) {
+export default function Dashboard({ members, payments, setPage, onRenewMember }) {
   const [reminders, setReminders] = useState(() => getReminders());
   const [triggerStatus, setTriggerStatus] = useState('');
 
@@ -108,7 +108,7 @@ export default function Dashboard({ members, payments, setPage }) {
           channels.forEach(channel => {
             // Check if reminder was already sent to this member via this channel today to avoid duplicates
             const alreadySentToday = currentList.some(r => 
-              (r.phone === member.phone || r.phone === "+91 9487817301") && 
+              (r.phone === member.phone || r.phone === "+91 8015552425") && 
               r.date === todayStr && 
               r.type === channel &&
               r.message.includes(member.fullName) &&
@@ -134,7 +134,7 @@ export default function Dashboard({ members, payments, setPage }) {
             const newLog = {
               id: `REM-${101 + currentList.length}`,
               clientName: member.fullName,
-              phone: "+91 9487817301", // force use target test number
+              phone: "+91 8015552425", // force use target test number
               date: todayStr,
               type: channel,
               status: "Sent",
@@ -216,7 +216,16 @@ export default function Dashboard({ members, payments, setPage }) {
           </button>
 
           <button
-            onClick={() => setPage('payments')}
+            onClick={() => {
+              if (onRenewMember) {
+                const now = new Date();
+                const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                const candidate = members.find(m => m.status === 'Expired' || (m.endDate && m.endDate <= todayStr)) || null;
+                onRenewMember(candidate);
+              } else {
+                setPage('members');
+              }
+            }}
             className="flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group"
           >
             <IndianRupee className="w-6 h-6 text-red-500 mb-2 group-hover:scale-110 transition-transform" />
@@ -276,7 +285,7 @@ export default function Dashboard({ members, payments, setPage }) {
           <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl">
             <span className="text-[10px] font-bold text-red-400 block mb-1">Target Phone Testing Line</span>
             <p className="text-[10px] text-zinc-400 leading-normal">
-              Active test WhatsApp endpoint set to: <code className="text-white font-bold">9487817301</code>
+              Active test WhatsApp endpoint set to: <code className="text-white font-bold">8015552425</code>
             </p>
           </div>
         </div>

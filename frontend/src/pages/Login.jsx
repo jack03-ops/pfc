@@ -3,7 +3,7 @@ import { Flame, Lock, Mail, Dumbbell, ShieldCheck } from 'lucide-react';
 import phoenixLogo from '../assets/phoenix_logo.png';
 
 export default function Login({ onLoginSuccess }) {
-  const [email, setEmail] = useState('phoenixfitnesscentre03@gmail.com');
+  const [email, setEmail] = useState('phoenixgym.vkp@gmail.com');
   const [password, setPassword] = useState('phoenix fitness centre');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,7 +14,7 @@ export default function Login({ onLoginSuccess }) {
     setLoading(true);
 
     setTimeout(() => {
-      const isOfficialAccount = email.trim().toLowerCase() === 'phoenixfitnesscentre03@gmail.com' && password === 'phoenix fitness centre';
+      const isOfficialAccount = (email.trim().toLowerCase() === 'phoenixgym.vkp@gmail.com' || email.trim().toLowerCase() === 'phoenixfitnesscentre03@gmail.com') && password === 'phoenix fitness centre';
       const isDemoAccount = email.trim().toLowerCase() === 'admin@phoenixgym.com' && password === 'admin123';
 
       if (isOfficialAccount || isDemoAccount) {
@@ -66,7 +66,7 @@ export default function Login({ onLoginSuccess }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-all placeholder:text-zinc-650"
-                  placeholder="phoenixfitnesscentre03@gmail.com"
+                  placeholder="phoenixgym.vkp@gmail.com"
                   required
                 />
               </div>
@@ -112,7 +112,7 @@ export default function Login({ onLoginSuccess }) {
             </div>
             <div className="text-[11px] text-zinc-400">
               <p className="font-semibold text-zinc-300">Official Admin Credentials Pre-configured</p>
-              <p className="mt-0.5">Email: <code className="text-red-400">phoenixfitnesscentre03@gmail.com</code></p>
+              <p className="mt-0.5">Email: <code className="text-red-400">phoenixgym.vkp@gmail.com</code></p>
               <p className="mt-0.5">Password: <code className="text-red-400">phoenix fitness centre</code></p>
             </div>
           </div>

@@ -16,8 +16,8 @@ const DEFAULT_MEMBERS = [
   {
     id: "PXM-1001",
     fullName: "Hari Ram Kumar",
-    phone: "+91 9487817301",
-    whatsapp: "+91 9487817301",
+    phone: "+91 8015552425",
+    whatsapp: "+91 8015552425",
     village: "Rampur",
     address: "Near Temple, Rampur",
     gender: "Male",
@@ -26,7 +26,7 @@ const DEFAULT_MEMBERS = [
     height: 175,
     weight: 74,
     bmi: 24.2,
-    emergencyContact: "+91 9487817301",
+    emergencyContact: "+91 8015552425",
     email: "hariramkumar2030@gmail.com",
     purposeOfJoining: "Fitness & Strength",
     gymExperience: "Yes",
@@ -340,7 +340,7 @@ const DEFAULT_PAYMENTS = [
 ];
 
 const DEFAULT_REMINDERS = [
-  { id: "REM-101", clientName: "Karthik Kumar", phone: "+91 9487817301", date: "2026-05-26", type: "WhatsApp", status: "Sent", message: "Hello Karthik Kumar, your Phoenix Gym membership expires in 1 day(s). Please renew your membership to continue uninterrupted access." }
+  { id: "REM-101", clientName: "Karthik Kumar", phone: "+91 8015552425", date: "2026-05-26", type: "WhatsApp", status: "Sent", message: "Hello Karthik Kumar, your Phoenix Gym membership expires in 1 day(s). Please renew your membership to continue uninterrupted access." }
 ];
 
 const DELETED_MEMBERS_KEY = 'phoenix_gym_deleted_member_ids';

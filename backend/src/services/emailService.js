@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import { generateInvoicePdfBuffer } from './invoicePdfService.js';
 
 const GYM_NAME = process.env.GYM_NAME || 'Phoenix Fitness Centre';
-const FROM_EMAIL = process.env.GMAIL_USER || 'phoenixfitnesscentre03@gmail.com';
+const FROM_EMAIL = process.env.GMAIL_USER || 'phoenixgym.vkp@gmail.com';
 
 const escapeHtml = (value = '') => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 const formatDate = (date) => new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(date);
@@ -127,7 +127,7 @@ export const buildWelcomeEmail = (member) => {
           <p style="margin:0 0 6px 0"><strong>Client ID:</strong> ${clientId}</p>
           <p style="margin:0 0 6px 0"><strong>Membership Expiry:</strong> ${expiryDate}</p>
           <p style="margin:0 0 6px 0"><strong>Gym Timings:</strong> Mon – Sat: 5:00 AM – 10:00 PM</p>
-          <p style="margin:0"><strong>Emergency &amp; Desk Contact:</strong> +91 9487817301</p>
+          <p style="margin:0"><strong>Emergency &amp; Desk Contact:</strong> +91 8015552425</p>
         </div>
 
         <p style="font-size:12px;color:#64748b">Please retain this digital receipt for your subscription records.</p>

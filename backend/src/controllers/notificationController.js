@@ -94,7 +94,7 @@ export const triggerAutoReminders = async (req, res, next) => {
           reminderText = `Hello ${member.fullName}, your Phoenix Gym membership expires in 1 day(s). Please renew your membership to continue uninterrupted access. Secure your slot to avoid lockout!`;
         }
 
-        const targetPhone = '+91 9487817301'; // Force strictly this test number
+        const targetPhone = '+91 8015552425'; // Force strictly this test number
 
         // Dispatch WhatsApp if not sent today
         try {

@@ -13,7 +13,7 @@ export default function ReceiptModal({ receipt, member, onClose }) {
   const clientName = receipt.clientName || member?.fullName || 'Gym Member';
   const clientId = receipt.clientId || member?.id || 'PXM-1001';
   const village = member?.village || 'Rampur';
-  const phone = member?.phone || '+91 9487817301';
+  const phone = member?.phone || '+91 8015552425';
   const plan = receipt.plan || 'Monthly';
   const method = receipt.method || 'UPI';
   const amount = receipt.amount || 1000;
@@ -78,7 +78,7 @@ export default function ReceiptModal({ receipt, member, onClose }) {
               <div>
                 <h1 className="text-xl font-black text-white print:text-black tracking-tight uppercase">PHOENIX FITNESS CENTRE</h1>
                 <p className="text-[11px] text-zinc-400 print:text-gray-600 font-semibold mt-0.5">Modern Gym & Personal Fitness Academy</p>
-                <p className="text-[10px] text-zinc-500 print:text-gray-500">Contact: +91 9487817301 | phoenixgym.vkp@gmail.com</p>
+                <p className="text-[10px] text-zinc-500 print:text-gray-500">Contact: +91 8015552425 | phoenixgym.vkp@gmail.com</p>
               </div>
             </div>
             <div className="text-right">

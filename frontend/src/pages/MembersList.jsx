@@ -16,10 +16,11 @@ import {
   ShieldAlert,
   Calendar,
   Mail,
-  Briefcase
+  Briefcase,
+  RotateCcw
 } from 'lucide-react';
 
-export default function MembersList({ members, onDeleteMember, onToggleStatus, onEditMember, onSendWelcomeEmail, setPage }) {
+export default function MembersList({ members, onDeleteMember, onToggleStatus, onEditMember, onSendWelcomeEmail, onRenewMember, setPage }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchField, setSearchField] = useState('all'); // all, name, id, phone, village
   const [statusFilter, setStatusFilter] = useState('all'); // all, active, inactive, expiring, pending
@@ -34,16 +35,30 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
 
     let active = 0;
     let inactive = 0;
+    let expired = 0;
     let expiring = 0;
     let todayRenewals = 0;
     let pending = 0;
 
     members.forEach(m => {
-      if (m.status === 'Active') active++;
-      if (m.status === 'Inactive') inactive++;
+      const parts = (m.endDate || '').split('-');
+      let isPastExpiry = false;
+      if (parts.length === 3) {
+        const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+        isPastExpiry = end.getTime() < todayStart.getTime();
+      }
+
+      if (m.status === 'Expired' || isPastExpiry) {
+        expired++;
+      } else if (m.status === 'Active') {
+        active++;
+      } else if (m.status === 'Inactive') {
+        inactive++;
+      }
+
       if (m.paymentStatus === 'Pending') pending++;
       
-      if (m.status === 'Active' && m.endDate) {
+      if (m.status === 'Active' && !isPastExpiry && m.endDate) {
         const parts = m.endDate.split('-');
         if (parts.length === 3) {
           const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
@@ -53,14 +68,14 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
         }
       }
 
-      const isDueToday = m.endDate === todayStr && m.status === 'Active';
+      const isDueToday = m.endDate === todayStr && (m.status === 'Active' || !isPastExpiry);
       const renewedToday = (m.startDate === todayStr || m.joiningDate === todayStr) && (m.membershipType === 'Renewal' || m.paymentStatus === 'Paid');
       if (isDueToday || renewedToday) {
         todayRenewals++;
       }
     });
 
-    return { active, inactive, expiring, todayRenewals, pending };
+    return { active, inactive, expired, expiring, todayRenewals, pending };
   }, [members]);
 
   // Compute filtered members
@@ -92,9 +107,27 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
       // 2. Status & Alert filters
       let matchesFilter = true;
       if (statusFilter === 'active') {
-        matchesFilter = member.status === 'Active';
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const parts = (member.endDate || '').split('-');
+        let isPastExpiry = false;
+        if (parts.length === 3) {
+          const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+          isPastExpiry = end.getTime() < todayStart.getTime();
+        }
+        matchesFilter = member.status === 'Active' && !isPastExpiry;
       } else if (statusFilter === 'inactive') {
         matchesFilter = member.status === 'Inactive';
+      } else if (statusFilter === 'expired') {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const parts = (member.endDate || '').split('-');
+        let isPastExpiry = false;
+        if (parts.length === 3) {
+          const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+          isPastExpiry = end.getTime() < todayStart.getTime();
+        }
+        matchesFilter = member.status === 'Expired' || isPastExpiry;
       } else if (statusFilter === 'pending') {
         matchesFilter = member.paymentStatus === 'Pending';
       } else if (statusFilter === 'expiring') {
@@ -185,9 +218,10 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
             >
               <option value="all">All Registrations ({members.length})</option>
               <option value="active">Active Subscriptions ({categoryCounts.active})</option>
-              <option value="inactive">Inactive Members ({categoryCounts.inactive})</option>
+              <option value="expired">Expired Members ({categoryCounts.expired})</option>
               <option value="expiring">Expiring in 15 Days ({categoryCounts.expiring})</option>
               <option value="today-renewals">Today's Renewals ({categoryCounts.todayRenewals})</option>
+              <option value="inactive">Inactive Members ({categoryCounts.inactive})</option>
               <option value="pending">Pending Payments ({categoryCounts.pending})</option>
             </select>
           </div>
@@ -214,8 +248,16 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
             <tbody className="divide-y divide-zinc-900/60 text-xs text-slate-300">
               {filteredMembers.length > 0 ? (
                 filteredMembers.map((member) => {
-                  const today = new Date();
-                  const isExpired = new Date(member.endDate) < today;
+                  const now = new Date();
+                  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+                  const parts = (member.endDate || '').split('-');
+                  let isExpired = false;
+                  if (parts.length === 3) {
+                    const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+                    isExpired = end.getTime() < todayStart.getTime() || member.status === 'Expired';
+                  } else {
+                    isExpired = member.status === 'Expired';
+                  }
                   
                   return (
                     <tr key={member.id} className="hover:bg-zinc-900/30 transition-colors">
@@ -292,28 +334,35 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                         )}
                       </td>
 
-                      {/* Status Toggle Button */}
+                      {/* Status Toggle Button / Expired Badge */}
                       <td className="p-4 text-center">
-                        <button
-                          onClick={() => onToggleStatus(member.id)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold cursor-pointer border transition-all ${
-                            member.status === 'Active'
-                              ? 'bg-red-500/10 text-red-400 border-red-500/25 hover:bg-red-500/20'
-                              : 'bg-zinc-900 text-slate-500 border-slate-700 hover:bg-slate-700'
-                          }`}
-                        >
-                          {member.status === 'Active' ? (
-                            <>
-                              <UserCheck className="w-3 h-3" />
-                              Active
-                            </>
-                          ) : (
-                            <>
-                              <UserX className="w-3 h-3" />
-                              Inactive
-                            </>
-                          )}
-                        </button>
+                        {isExpired ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                            <ShieldAlert className="w-3 h-3" />
+                            Expired
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => onToggleStatus(member.id)}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold cursor-pointer border transition-all ${
+                              member.status === 'Active'
+                                ? 'bg-red-500/10 text-red-400 border-red-500/25 hover:bg-red-500/20'
+                                : 'bg-zinc-900 text-slate-500 border-slate-700 hover:bg-slate-700'
+                            }`}
+                          >
+                            {member.status === 'Active' ? (
+                              <>
+                                <UserCheck className="w-3 h-3" />
+                                Active
+                              </>
+                            ) : (
+                              <>
+                                <UserX className="w-3 h-3" />
+                                Inactive
+                              </>
+                            )}
+                          </button>
+                        )}
                         {member.lastReminderDate === new Date().toISOString().split('T')[0] && (
                           <span className="block mt-1 text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 whitespace-nowrap">
                             ✓ Reminder Sent
@@ -324,6 +373,21 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                       {/* Actions */}
                       <td className="p-4 pr-6 text-right">
                         <div className="inline-flex items-center gap-1.5">
+                          {/* Quick Renew button */}
+                          {onRenewMember && (
+                            <button
+                              onClick={() => onRenewMember(member)}
+                              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                                isExpired 
+                                  ? 'text-rose-400 hover:text-white bg-rose-500/20 hover:bg-rose-600 border border-rose-500/30' 
+                                  : 'text-slate-400 hover:text-red-400 hover:bg-zinc-900'
+                              }`}
+                              title={isExpired ? 'Reactivate & Renew Expired Membership' : 'Renew Membership'}
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
+                          )}
+
                           {/* View details button */}
                           <button
                             onClick={() => setViewingMember(member)}

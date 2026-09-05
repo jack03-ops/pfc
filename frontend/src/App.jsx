@@ -10,6 +10,7 @@ import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
 import WelcomeEmailModal from './components/WelcomeEmailModal';
 import ReminderEmailModal from './components/ReminderEmailModal';
+import RenewModal from './components/RenewModal';
 import { CheckCircle2 } from 'lucide-react';
 import { 
   getMembers, 
@@ -34,6 +35,8 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [welcomeMember, setWelcomeMember] = useState(null);
   const [reminderMemberData, setReminderMemberData] = useState(null);
+  const [renewModalMember, setRenewModalMember] = useState(null);
+  const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
   const [clearedNotificationIds, setClearedNotificationIds] = useState(() => getClearedNotificationIds());
 
   const showToast = (message, type = 'info') => {
@@ -51,11 +54,13 @@ export default function App() {
 
     let count = 0;
     members.forEach(m => {
-      if (m.status === 'Active' && m.endDate) {
+      if (m.endDate) {
         const parts = m.endDate.split('-');
         if (parts.length === 3) {
           const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
-          if (end >= todayStart && end <= fifteenDaysEnd) {
+          const isExpired = end.getTime() < todayStart.getTime() || m.status === 'Expired';
+          const isExpiring = !isExpired && end >= todayStart && end <= fifteenDaysEnd;
+          if (isExpired || isExpiring) {
             if (!clearedNotificationIds.includes(`exp-${m.id}`)) {
               count++;
             }
@@ -275,11 +280,72 @@ export default function App() {
     });
   };
 
+  // Membership Renewal Handlers
+  const handleOpenRenewModal = (member = null) => {
+    setRenewModalMember(member);
+    setIsRenewModalOpen(true);
+  };
+
+  const handleConfirmRenew = ({ memberId, plan, amount, paymentMethod, newStartDate, newEndDate, notes }) => {
+    const targetMember = members.find(m => m.id === memberId);
+    if (!targetMember) return;
+
+    // 1. Update member state: activate membership, update end date, set renewal type & paid status
+    const updatedMembers = members.map(m => {
+      if (m.id === memberId) {
+        return {
+          ...m,
+          status: 'Active',
+          membershipType: 'Renewal',
+          paymentStatus: 'Paid',
+          amountPaid: amount,
+          plan: plan,
+          startDate: newStartDate,
+          endDate: newEndDate,
+          lastRenewalDate: newStartDate,
+          notes: notes ? (m.notes ? `${m.notes} | ${notes}` : notes) : m.notes
+        };
+      }
+      return m;
+    });
+
+    setMembers(updatedMembers);
+    saveMembers(updatedMembers);
+
+    // 2. Register renewal payment ledger transaction
+    const txnId = `TXN-${101 + payments.length}`;
+    const newTxn = {
+      id: txnId,
+      clientId: memberId,
+      clientName: targetMember.fullName,
+      amount: amount,
+      date: newStartDate,
+      plan: plan,
+      type: 'Renewal',
+      method: paymentMethod || 'UPI',
+      notes: notes || 'Membership Renewal'
+    };
+    const updatedPayments = [newTxn, ...payments];
+    setPayments(updatedPayments);
+    savePayments(updatedPayments);
+
+    // 3. Clear any past expiration alert for this member from notifications
+    setClearedNotificationIds(prev => {
+      const expId = `exp-${memberId}`;
+      const next = prev.includes(expId) ? prev : [...prev, expId];
+      saveClearedNotificationIds(next);
+      return next;
+    });
+
+    // 4. Show success toast feedback
+    showToast(`🎉 Membership renewed for ${targetMember.fullName}! New validity through ${newEndDate}`, 'success');
+  };
+
   // Render correct dashboard view based on active tab
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard members={members} payments={payments} setPage={setCurrentPage} />;
+        return <Dashboard members={members} payments={payments} setPage={setCurrentPage} onRenewMember={handleOpenRenewModal} />;
       case 'members':
         return (
           <MembersList 
@@ -288,6 +354,7 @@ export default function App() {
             onToggleStatus={handleToggleStatus} 
             onEditMember={handleEditMemberTrigger}
             onSendWelcomeEmail={(m) => setWelcomeMember(m)}
+            onRenewMember={handleOpenRenewModal}
             setPage={setCurrentPage} 
           />
         );
@@ -332,13 +399,14 @@ export default function App() {
             onMarkAsPaid={handleMarkAsPaid} 
             onSendReminderEmail={(m, daysLeft) => setReminderMemberData({ member: m, daysLeft })}
             onSendWhatsAppReminder={handleWhatsAppReminderSent}
+            onRenewMember={handleOpenRenewModal}
             setPage={setCurrentPage} 
           />
         );
       case 'settings':
         return <Settings onSettingsUpdate={() => setMembers(getMembers())} />;
       default:
-        return <Dashboard members={members} payments={payments} setPage={setCurrentPage} />;
+        return <Dashboard members={members} payments={payments} setPage={setCurrentPage} onRenewMember={handleOpenRenewModal} />;
     }
   };
 
@@ -404,6 +472,19 @@ export default function App() {
           daysLeft={reminderMemberData.daysLeft}
           onClose={() => setReminderMemberData(null)}
           onEmailSent={handleReminderSent}
+        />
+      )}
+
+      {/* Membership Renewal Modal */}
+      {isRenewModalOpen && (
+        <RenewModal
+          member={renewModalMember}
+          allMembers={members}
+          onClose={() => {
+            setIsRenewModalOpen(false);
+            setRenewModalMember(null);
+          }}
+          onConfirmRenew={handleConfirmRenew}
         />
       )}
     </div>

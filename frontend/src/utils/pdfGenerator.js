@@ -8,13 +8,13 @@ export function generateInvoicePdfBlob({
   plan = 'Monthly',
   amount = 1000,
   date = new Date().toLocaleDateString('en-IN'),
-  phone = '+91 9487817301',
+  phone = '+91 8015552425',
   address = 'Near Temple, Rampur'
 }) {
   const safeName = (clientName || 'Gym Member').replace(/[()]/g, '');
   const safeId = (clientId || 'PXM-1001').replace(/[()]/g, '');
   const safeInvoice = (invoiceNo || 'PFC-INV-101').replace(/[()]/g, '');
-  const safePhone = (phone || '+91 9487817301').replace(/[()]/g, '');
+  const safePhone = (phone || '+91 8015552425').replace(/[()]/g, '');
   const safeAddress = (address || 'Rampur').replace(/[()]/g, '');
   const safePlan = (plan || 'Monthly').replace(/[()]/g, '');
   const numAmount = typeof amount === 'number' ? amount : Number(amount) || 1000;
@@ -37,7 +37,7 @@ BT
 /F1 10 Tf
 1 1 1 rg
 50 772 Td
-(MODERN GYM & PERSONAL FITNESS ACADEMY | Phone: +91 9487817301) Tj
+(MODERN GYM & PERSONAL FITNESS ACADEMY | Phone: +91 8015552425) Tj
 ET
 
 % Official Receipt Badge Box
@@ -246,7 +246,7 @@ BT
 /F1 8 Tf
 0.4 0.4 0.4 rg
 50 370 Td
-(4. For any locker or trainer queries, please contact reception desk: +91 9487817301.) Tj
+(4. For any locker or trainer queries, please contact reception desk: +91 8015552425.) Tj
 ET
 
 % Footer Stamp
@@ -263,8 +263,8 @@ ET
 BT
 /F1 8 Tf
 0.5 0.5 0.5 rg
-195 300 Td
-(Phoenix Fitness Centre - Rampur | Admin: phoenixfitnesscentre03@gmail.com) Tj
+180 300 Td
+(Phoenix Fitness Centre | Admin: phoenixgym.vkp@gmail.com | Phone: +91 8015552425) Tj
 ET
 Q
 `;

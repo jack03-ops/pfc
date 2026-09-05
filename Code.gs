@@ -11,7 +11,7 @@
 // ==============================================================================
 const CONFIG = {
   GYM_NAME: 'Phoenix Fitness Centre',
-  ADMIN_EMAIL: 'phoenixfitnesscentre03@gmail.com',
+  ADMIN_EMAIL: 'phoenixgym.vkp@gmail.com',
   TEST_MODE: false,                           // Set to FALSE for direct Gmail delivery to clients
   ENABLE_EMAIL: true,                         // Enable Automated Email Reminders
   ENABLE_WHATSAPP: false,                     // Disabled (Email Only!)

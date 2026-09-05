@@ -20,7 +20,7 @@ BT
 /F1 10 Tf
 1 1 1 rg
 50 772 Td
-(MODERN GYM & PERSONAL FITNESS ACADEMY | Phone: +91 9487817301) Tj
+(MODERN GYM & PERSONAL FITNESS ACADEMY | Phone: +91 8015552425) Tj
 ET
 
 % Official Receipt Badge Box
@@ -73,7 +73,7 @@ BT
 /F1 9 Tf
 0.3 0.3 0.3 rg
 65 650 Td
-(Phone: ${phone || '+91 9487817301'}  |  Date: ${date}) Tj
+(Phone: ${phone || '+91 8015552425'}  |  Date: ${date}) Tj
 ET
 
 BT

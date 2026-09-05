@@ -31,10 +31,10 @@ For complete detailed documentation on database configurations, environment vari
 
 ### Automated membership-expiry emails
 
-Production checks active memberships daily at 08:30 IST and emails clients exactly 3 days and 1 day before their end date. The sender defaults to `phoenixfitnesscentre03@gmail.com`. Set these Vercel environment variables before deploying:
+Production checks active memberships daily at 08:30 IST and emails clients exactly 3 days and 1 day before their end date. The sender defaults to `phoenixgym.vkp@gmail.com`. Set these Vercel environment variables before deploying:
 
 ```text
-GMAIL_USER=phoenixfitnesscentre03@gmail.com
+GMAIL_USER=phoenixgym.vkp@gmail.com
 GMAIL_APP_PASSWORD=your-16-character-Google-app-password
 CRON_SECRET=a-long-random-secret
 GYM_NAME=Phoenix Fitness Centre

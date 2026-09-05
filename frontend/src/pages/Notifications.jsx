@@ -25,6 +25,7 @@ export default function Notifications({
   onMarkAsPaid, 
   onSendReminderEmail, 
   onSendWhatsAppReminder, 
+  onRenewMember,
   setPage 
 }) {
   // Compute alerts dynamically from Mock DB
@@ -34,26 +35,47 @@ export default function Notifications({
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const fifteenDaysEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 15, 23, 59, 59, 999);
 
-    // 1. Expiring memberships
+    // 1. Expiring and Expired memberships
     members.forEach(m => {
-      if (m.status === 'Active' && m.endDate) {
+      if (m.endDate) {
         const parts = m.endDate.split('-');
         if (parts.length === 3) {
           const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
-          if (end >= todayStart && end <= fifteenDaysEnd) {
-            const diffTime = end.getTime() - todayStart.getTime();
-            const daysLeft = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
-            const isToday = daysLeft === 0;
-            const isUrgent = daysLeft === 1;
-            const isThreeDay = daysLeft === 3;
+          const diffTime = end.getTime() - todayStart.getTime();
+          const daysLeft = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+          if (daysLeft < 0 || m.status === 'Expired') {
             list.push({
               id: `exp-${m.id}`,
               type: 'expiration',
               daysLeft: daysLeft,
-              title: isToday ? '⚠️ Membership Expires TODAY!' : isUrgent ? '🚨 Expires Tomorrow (1 Day Left!)' : isThreeDay ? '⏰ Expires in 3 Days' : `Membership Expiring in ${daysLeft} Days`,
+              title: '🚨 Membership Expired',
+              message: `${m.fullName} (${m.id})'s ${m.plan} plan expired on ${m.endDate}. Renew to reactivate gym access.`,
+              member: m,
+              severity: 'danger',
+              isExpired: true
+            });
+          } else if (end <= fifteenDaysEnd) {
+            const isToday = daysLeft === 0;
+            const isUrgent = daysLeft === 1;
+            const isTwoDay = daysLeft === 2;
+            const isThreeDay = daysLeft === 3;
+
+            let alertTitle = `Membership Expiring in ${daysLeft} Days`;
+            if (isToday) alertTitle = '⚠️ Membership Expires TODAY!';
+            else if (isUrgent) alertTitle = '🚨 Expires Tomorrow (1 Day Left!)';
+            else if (isTwoDay) alertTitle = '⏳ Expires in 2 Days';
+            else if (isThreeDay) alertTitle = '⏰ Expires in 3 Days';
+
+            list.push({
+              id: `exp-${m.id}`,
+              type: 'expiration',
+              daysLeft: daysLeft,
+              title: alertTitle,
               message: `${m.fullName} (${m.id})'s ${m.plan} plan expires ${isToday ? 'TODAY' : isUrgent ? 'tomorrow' : `in ${daysLeft} days`} on ${m.endDate}.`,
               member: m,
-              severity: isToday || isUrgent ? 'danger' : 'warning'
+              severity: isToday || isUrgent ? 'danger' : 'warning',
+              isExpired: false
             });
           }
         }
@@ -86,7 +108,7 @@ export default function Notifications({
       });
     });
 
-    return list.slice(0, 8); // Top 8 relevant notifications
+    return list.slice(0, 10); // Top relevant notifications
   }, [members]);
 
   // Filter out cleared/dismissed alerts
@@ -107,16 +129,25 @@ export default function Notifications({
     }
 
     let text = '';
-    const isFinal = daysLeft === 1;
+    const isExpired = daysLeft < 0 || member.status === 'Expired';
+    const isToday = daysLeft === 0;
+    const isUrgent = daysLeft === 1;
+    const isTwoDay = daysLeft === 2;
     const isThreeDay = daysLeft === 3;
     const renewalAmount = member.amountPaid ? Number(member.amountPaid) : 1000;
 
-    if (isFinal) {
-      text = `🚨 *URGENT MEMBERSHIP EXPIRY NOTICE - PHOENIX FITNESS CENTRE* 🚨\n\nHello *${member.fullName}*,\n\nThis is an urgent reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires *TOMORROW (${member.endDate})*!\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (Expires Tomorrow)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 9487817301* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 9487817301) to keep your gym access uninterrupted.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 9487817301`;
+    if (isExpired) {
+      text = `🚨 *MEMBERSHIP EXPIRED NOTICE - PHOENIX FITNESS CENTRE* 🚨\n\nHello *${member.fullName}*,\n\nYour *${member.plan}* gym membership with *Phoenix Fitness Centre* has expired on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Status: Expired (${member.endDate})\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 8015552425) to reactivate your gym access immediately.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 8015552425`;
+    } else if (isToday) {
+      text = `⚠️ *URGENT MEMBERSHIP EXPIRES TODAY - PHOENIX FITNESS CENTRE* ⚠️\n\nHello *${member.fullName}*,\n\nThis is an urgent reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires *TODAY (${member.endDate})*!\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (Expires Today)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 8015552425) to keep your gym access uninterrupted.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 8015552425`;
+    } else if (isUrgent) {
+      text = `🚨 *URGENT MEMBERSHIP EXPIRY NOTICE - PHOENIX FITNESS CENTRE* 🚨\n\nHello *${member.fullName}*,\n\nThis is an urgent reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires *TOMORROW (${member.endDate})*!\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (Expires Tomorrow - 1 Day Left!)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 8015552425) to keep your gym access uninterrupted.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 8015552425`;
+    } else if (isTwoDay) {
+      text = `⏳ *MEMBERSHIP EXPIRY NOTICE - PHOENIX FITNESS CENTRE* ⏳\n\nHello *${member.fullName}*,\n\nFriendly reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires in *2 days* on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (2 Days Left)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nSend payment confirmation to this WhatsApp number (+91 8015552425). We look forward to continuing your fitness journey!\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 8015552425`;
     } else if (isThreeDay) {
-      text = `🏋️ *MEMBERSHIP RENEWAL REMINDER - PHOENIX FITNESS CENTRE* 🏋️\n\nHello *${member.fullName}*,\n\nFriendly reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires in *3 days* on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (3 Days Left)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 9487817301* (UPI ID: phoenixgym.vkp@oksbi).\n\nSend payment confirmation to this WhatsApp number (+91 9487817301). We look forward to continuing your fitness journey!\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 9487817301`;
+      text = `🏋️ *MEMBERSHIP RENEWAL REMINDER - PHOENIX FITNESS CENTRE* 🏋️\n\nHello *${member.fullName}*,\n\nFriendly reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires in *3 days* on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (3 Days Left)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nSend payment confirmation to this WhatsApp number (+91 8015552425). We look forward to continuing your fitness journey!\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 8015552425`;
     } else {
-      text = `Hello *${member.fullName}*, this is a friendly reminder from *Phoenix Fitness Centre* regarding your *${member.plan}* membership ending on *${member.endDate}*. Please renew on time to avoid interruption!\n\nUPI: phoenixgym.vkp@oksbi (+91 9487817301)\n\nThank you,\n*Phoenix Fitness Centre*`;
+      text = `Hello *${member.fullName}*, this is a friendly reminder from *Phoenix Fitness Centre* regarding your *${member.plan}* membership ending on *${member.endDate}*. Please renew on time to avoid interruption!\n\nUPI: phoenixgym.vkp@oksbi (+91 8015552425)\n\nThank you,\n*Phoenix Fitness Centre*`;
     }
 
     const encodedText = encodeURIComponent(text);
@@ -222,21 +253,33 @@ export default function Notifications({
 
                 {/* Operations triggers */}
                 <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                  {/* Quick Renewal trigger */}
+                  {alert.type === 'expiration' && onRenewMember && (
+                    <button
+                      onClick={() => onRenewMember(alert.member)}
+                      className="px-3 py-1.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer shadow-sm hover:shadow-red-500/20"
+                      title="Renew membership now"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Renew</span>
+                    </button>
+                  )}
+
                   {/* Email Reminder prompt with attached PDF */}
                   {alert.type === 'expiration' && alert.member.email && (
                     <button
-                      onClick={() => onSendReminderEmail && onSendReminderEmail(alert.member, alert.daysLeft)}
+                      onClick={() => onSendReminderEmail && onSendReminderEmail(alert.member, Math.max(1, alert.daysLeft || 1))}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer border ${
                         isReminderSentToday
                           ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border-emerald-500/40'
-                          : alert.daysLeft === 1
+                          : alert.daysLeft <= 1
                           ? 'bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border-rose-500/40 shadow-sm'
                           : 'bg-amber-500/20 hover:bg-amber-600 text-amber-300 hover:text-white border-amber-500/40 shadow-sm'
                       }`}
-                      title={isReminderSentToday ? `Notice sent today at ${alert.member.lastReminderTime || ''}. Click to resend.` : `Send ${alert.daysLeft}-day reminder email & PDF invoice`}
+                      title={isReminderSentToday ? `Notice sent today at ${alert.member.lastReminderTime || ''}. Click to resend.` : `Send reminder email & PDF invoice`}
                     >
                       {isReminderSentToday ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Mail className="w-3.5 h-3.5" />}
-                      <span>{isReminderSentToday ? '✓ Sent (Resend)' : alert.daysLeft === 1 ? '1-Day Reminder' : '3-Day Reminder'}</span>
+                      <span>{isReminderSentToday ? '✓ Sent (Resend)' : alert.isExpired ? 'Expired Notice' : alert.daysLeft === 0 ? 'Today Notice' : `${alert.daysLeft}-Day Reminder`}</span>
                     </button>
                   )}
 
@@ -248,7 +291,7 @@ export default function Notifications({
                         ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                         : 'bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white border-emerald-500/25'
                     }`}
-                    title="Send alert notice on Web WhatsApp (+91 9487817301)"
+                    title="Send alert notice on Web WhatsApp (+91 8015552425)"
                   >
                     {isWhatsAppSentToday ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <MessageSquare className="w-3.5 h-3.5" />}
                     <span>{isWhatsAppSentToday ? '✓ WhatsApp (Resend)' : 'Web WhatsApp'}</span>

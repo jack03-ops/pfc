@@ -15,8 +15,8 @@ export default function WelcomeEmailModal({ member, onClose, onEmailSent }) {
   if (!member) return null;
 
   const gymName = "Phoenix Fitness Centre";
-  const contactPhone = "+91 9487817301";
-  const contactEmail = "phoenixfitnesscentre03@gmail.com";
+  const contactPhone = "+91 8015552425";
+  const contactEmail = "phoenixgym.vkp@gmail.com";
   const clientEmail = member.email || 'member@gmail.com';
   const clientName = member.fullName || 'Gym Member';
   const clientId = member.id || 'PXM-1001';
@@ -369,7 +369,7 @@ ${gymName} Team`;
                     <div>
                       <h1 className="text-lg font-black text-white tracking-tight uppercase">PHOENIX FITNESS CENTRE</h1>
                       <p className="text-[11px] text-zinc-400 font-semibold">Modern Gym &amp; Personal Fitness Academy</p>
-                      <p className="text-[10px] text-zinc-500">Contact: +91 9487817301 | phoenixgym.vkp@gmail.com</p>
+                      <p className="text-[10px] text-zinc-500">Contact: +91 8015552425 | phoenixgym.vkp@gmail.com</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -388,7 +388,7 @@ ${gymName} Team`;
                     <h3 className="font-extrabold text-white text-sm">{clientName}</h3>
                     <p className="text-zinc-400">Member ID: <strong className="text-white">{clientId}</strong></p>
                     <p className="text-zinc-400">Address: {member.village || 'Rampur'}</p>
-                    <p className="text-zinc-400">Phone: {member.phone || '+91 9487817301'}</p>
+                    <p className="text-zinc-400">Phone: {member.phone || '+91 8015552425'}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1">PAYMENT METRICS</p>
