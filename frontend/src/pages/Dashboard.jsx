@@ -27,33 +27,37 @@ export default function Dashboard({ members, payments, setPage }) {
   const [reminders, setReminders] = useState(() => getReminders());
   const [triggerStatus, setTriggerStatus] = useState('');
 
-  // 1. Compute summary metrics dynamically
+  // 1. Compute summary metrics dynamically based on live members state and real-time dates
   const metrics = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const fifteenDaysEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 15, 23, 59, 59, 999);
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
     const total = members.length;
     const active = members.filter(m => m.status === 'Active').length;
     
-    // Expiring soon: ending date is within the next 15 days, and member is active
-    const today = new Date('2026-05-27');
-    const fifteenDaysFromNow = new Date('2026-05-27');
-    fifteenDaysFromNow.setDate(today.getDate() + 15);
-    
+    // Tab 1: Expiring soon: ending date is within the next 15 days, and member is active
     const expiringSoon = members.filter(m => {
-      if (m.status !== 'Active') return false;
-      const endDate = new Date(m.endDate);
-      return endDate >= today && endDate <= fifteenDaysFromNow;
+      if (m.status !== 'Active' || !m.endDate) return false;
+      const parts = m.endDate.split('-');
+      if (parts.length !== 3) return false;
+      const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+      return end >= todayStart && end <= fifteenDaysEnd;
     }).length;
 
-    // Pending payments
+    // Tab 2: Pending payments
     const pendingPayments = members.filter(m => m.paymentStatus === 'Pending').length;
 
-    // Today's Renewals: members whose membership ends today or has been renewed today
+    // Tab 3: Today's Renewals: members whose membership ends today or has been renewed today
     const todaysRenewals = members.filter(m => {
-      const todayStr = '2026-05-27';
-      return m.startDate === todayStr && m.paymentStatus === 'Paid';
+      const isDueToday = m.endDate === todayStr && m.status === 'Active';
+      const renewedToday = (m.startDate === todayStr || m.joiningDate === todayStr) && (m.membershipType === 'Renewal' || m.paymentStatus === 'Paid');
+      return isDueToday || renewedToday;
     }).length;
 
     // Total Revenue
-    const revenue = payments.reduce((acc, curr) => acc + curr.amount, 0);
+    const revenue = payments.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
     return {
       total,
@@ -78,7 +82,9 @@ export default function Dashboard({ members, payments, setPage }) {
     setTriggerStatus('Scanning database for expiring memberships...');
     
     setTimeout(() => {
-      const today = new Date('2026-05-27');
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const currentList = [...reminders];
       let newDispatches = 0;
       let duplicatesSkipped = 0;
@@ -87,11 +93,13 @@ export default function Dashboard({ members, payments, setPage }) {
       const targetIntervals = [1, 3, 5];
 
       members.forEach(member => {
-        if (member.status !== 'Active') return;
+        if (member.status !== 'Active' || !member.endDate) return;
 
-        const endDate = new Date(member.endDate);
-        const diffTime = endDate - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const parts = member.endDate.split('-');
+        if (parts.length !== 3) return;
+        const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+        const diffTime = end.getTime() - todayStart.getTime();
+        const diffDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
 
         if (targetIntervals.includes(diffDays)) {
           // Send alerts via BOTH channels: WhatsApp and SMS
@@ -101,10 +109,10 @@ export default function Dashboard({ members, payments, setPage }) {
             // Check if reminder was already sent to this member via this channel today to avoid duplicates
             const alreadySentToday = currentList.some(r => 
               (r.phone === member.phone || r.phone === "+91 9487817301") && 
-              r.date === '2026-05-27' && 
+              r.date === todayStr && 
               r.type === channel &&
               r.message.includes(member.fullName) &&
-              (r.message.includes(`expires in 5 day(s)`) || r.message.includes(`expires in 3 day(s)`) || r.message.includes(`expires in 1 day(s)`))
+              r.message.includes(`expires in ${diffDays} day(s)`)
             );
 
             if (alreadySentToday) {
@@ -127,7 +135,7 @@ export default function Dashboard({ members, payments, setPage }) {
               id: `REM-${101 + currentList.length}`,
               clientName: member.fullName,
               phone: "+91 9487817301", // force use target test number
-              date: "2026-05-27",
+              date: todayStr,
               type: channel,
               status: "Sent",
               message: reminderMessage

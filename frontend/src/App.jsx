@@ -14,6 +14,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { 
   getMembers, 
   saveMembers, 
+  deleteMember,
   getPayments, 
   savePayments, 
   initializeDb,
@@ -30,12 +31,12 @@ export default function App() {
   const [members, setMembers] = useState([]);
   const [payments, setPayments] = useState([]);
   const [memberToEdit, setMemberToEdit] = useState(null);
-  const [welcomeMember, setWelcomeMember] = useState(null);
-  const [reminderMemberData, setReminderMemberData] = useState(null);
   const [toast, setToast] = useState(null);
+  const [welcomeModalMember, setWelcomeModalMember] = useState(null);
+  const [reminderModalData, setReminderModalData] = useState(null);
   const [clearedNotificationIds, setClearedNotificationIds] = useState(() => getClearedNotificationIds());
 
-  const showToast = (message, type = 'success') => {
+  const showToast = (message, type = 'info') => {
     setToast({ message, type });
     setTimeout(() => {
       setToast(null);
@@ -44,17 +45,20 @@ export default function App() {
 
   // Compute active, un-cleared alerts for Sidebar badge
   const activeAlertsCount = React.useMemo(() => {
-    const today = new Date();
-    const fifteenDaysFromNow = new Date();
-    fifteenDaysFromNow.setDate(today.getDate() + 15);
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const fifteenDaysEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 15, 23, 59, 59, 999);
 
     let count = 0;
     members.forEach(m => {
-      if (m.status === 'Active') {
-        const endDate = new Date(m.endDate);
-        if (endDate >= today && endDate <= fifteenDaysFromNow) {
-          if (!clearedNotificationIds.includes(`exp-${m.id}`)) {
-            count++;
+      if (m.status === 'Active' && m.endDate) {
+        const parts = m.endDate.split('-');
+        if (parts.length === 3) {
+          const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+          if (end >= todayStart && end <= fifteenDaysEnd) {
+            if (!clearedNotificationIds.includes(`exp-${m.id}`)) {
+              count++;
+            }
           }
         }
       }
@@ -190,9 +194,8 @@ export default function App() {
   // Delete member record
   const handleDeleteMember = (id) => {
     if (window.confirm(`Are you sure you want to delete member ${id}?`)) {
-      const updated = members.filter(m => m.id !== id);
+      const updated = deleteMember(id);
       setMembers(updated);
-      saveMembers(updated);
       showToast('Member profile deleted successfully!', 'success');
     }
   };

@@ -25,6 +25,44 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
   const [statusFilter, setStatusFilter] = useState('all'); // all, active, inactive, expiring, pending
   const [viewingMember, setViewingMember] = useState(null);
 
+  // Compute live category counts
+  const categoryCounts = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const fifteenDaysEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 15, 23, 59, 59, 999);
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    let active = 0;
+    let inactive = 0;
+    let expiring = 0;
+    let todayRenewals = 0;
+    let pending = 0;
+
+    members.forEach(m => {
+      if (m.status === 'Active') active++;
+      if (m.status === 'Inactive') inactive++;
+      if (m.paymentStatus === 'Pending') pending++;
+      
+      if (m.status === 'Active' && m.endDate) {
+        const parts = m.endDate.split('-');
+        if (parts.length === 3) {
+          const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+          if (end >= todayStart && end <= fifteenDaysEnd) {
+            expiring++;
+          }
+        }
+      }
+
+      const isDueToday = m.endDate === todayStr && m.status === 'Active';
+      const renewedToday = (m.startDate === todayStr || m.joiningDate === todayStr) && (m.membershipType === 'Renewal' || m.paymentStatus === 'Paid');
+      if (isDueToday || renewedToday) {
+        todayRenewals++;
+      }
+    });
+
+    return { active, inactive, expiring, todayRenewals, pending };
+  }, [members]);
+
   // Compute filtered members
   const filteredMembers = useMemo(() => {
     return members.filter((member) => {
@@ -60,11 +98,22 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
       } else if (statusFilter === 'pending') {
         matchesFilter = member.paymentStatus === 'Pending';
       } else if (statusFilter === 'expiring') {
-        const today = new Date();
-        const fifteenDaysFromNow = new Date();
-        fifteenDaysFromNow.setDate(today.getDate() + 15);
-        const endDate = new Date(member.endDate);
-        matchesFilter = member.status === 'Active' && endDate >= today && endDate <= fifteenDaysFromNow;
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const fifteenDaysEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 15, 23, 59, 59, 999);
+        const parts = (member.endDate || '').split('-');
+        if (parts.length === 3) {
+          const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+          matchesFilter = member.status === 'Active' && end >= todayStart && end <= fifteenDaysEnd;
+        } else {
+          matchesFilter = false;
+        }
+      } else if (statusFilter === 'today-renewals') {
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const isDueToday = member.endDate === todayStr && member.status === 'Active';
+        const renewedToday = (member.startDate === todayStr || member.joiningDate === todayStr) && (member.membershipType === 'Renewal' || member.paymentStatus === 'Paid');
+        matchesFilter = isDueToday || renewedToday;
       }
 
       return matchesSearch && matchesFilter;
@@ -73,11 +122,24 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-60px)] md:max-h-[calc(100vh-80px)]">
-      {/* Header Controls */}
-      <div className="flex justify-end">
+      {/* Header Controls & Summary Counter */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-900">
+        <div>
+          <h2 className="text-base font-black uppercase text-white tracking-wide flex items-center gap-2">
+            <User className="w-5 h-5 text-red-500" />
+            Gym Members Directory
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            <span className="font-bold text-white">{filteredMembers.length}</span> member{filteredMembers.length === 1 ? '' : 's'} listed
+            {filteredMembers.length !== members.length && (
+              <span className="text-slate-500"> (filtered from {members.length} total)</span>
+            )}
+          </p>
+        </div>
+
         <button
           onClick={() => setPage('add-member')}
-          className="px-4 py-2.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0 self-start md:self-auto"
+          className="px-4 py-2.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0 self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           Add Member
@@ -114,18 +176,19 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
             </select>
           </div>
 
-          {/* Quick Filters */}
+          {/* Quick Filters with live counters */}
           <div className="md:col-span-3">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full px-3 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-red-500 font-semibold"
             >
-              <option value="all">All Registrations</option>
-              <option value="active">Active Subscriptions</option>
-              <option value="inactive">Inactive Members</option>
-              <option value="expiring">Expiring in 15 Days</option>
-              <option value="pending">Pending Payments</option>
+              <option value="all">All Registrations ({members.length})</option>
+              <option value="active">Active Subscriptions ({categoryCounts.active})</option>
+              <option value="inactive">Inactive Members ({categoryCounts.inactive})</option>
+              <option value="expiring">Expiring in 15 Days ({categoryCounts.expiring})</option>
+              <option value="today-renewals">Today's Renewals ({categoryCounts.todayRenewals})</option>
+              <option value="pending">Pending Payments ({categoryCounts.pending})</option>
             </select>
           </div>
         </div>

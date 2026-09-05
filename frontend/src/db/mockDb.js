@@ -343,16 +343,54 @@ const DEFAULT_REMINDERS = [
   { id: "REM-101", clientName: "Karthik Kumar", phone: "+91 9487817301", date: "2026-05-26", type: "WhatsApp", status: "Sent", message: "Hello Karthik Kumar, your Phoenix Gym membership expires in 1 day(s). Please renew your membership to continue uninterrupted access." }
 ];
 
+const DELETED_MEMBERS_KEY = 'phoenix_gym_deleted_member_ids';
+
+export const getDeletedMemberIds = () => {
+  try {
+    const raw = localStorage.getItem(DELETED_MEMBERS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+export const saveDeletedMemberIds = (ids) => {
+  try {
+    localStorage.setItem(DELETED_MEMBERS_KEY, JSON.stringify(ids));
+  } catch (e) {}
+};
+
 export const getMembers = () => {
+  const deletedIds = getDeletedMemberIds();
   const data = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (!data) {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERS));
-    return DEFAULT_MEMBERS;
+    const initial = DEFAULT_MEMBERS.filter(m => !deletedIds.includes(m.id));
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initial));
+    return initial;
   }
-  return JSON.parse(data);
+  try {
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed.filter(m => !deletedIds.includes(m.id)) : DEFAULT_MEMBERS;
+  } catch (e) {
+    return DEFAULT_MEMBERS.filter(m => !deletedIds.includes(m.id));
+  }
+};
+
+export const deleteMember = (id) => {
+  const deletedIds = getDeletedMemberIds();
+  if (!deletedIds.includes(id)) {
+    deletedIds.push(id);
+    saveDeletedMemberIds(deletedIds);
+  }
+  const current = getMembers();
+  const updated = current.filter(m => m.id !== id);
+  saveMembers(updated);
+  return updated;
 };
 
 const CLOUD_SYNC_URL = 'https://5pqzjtksdbperly4.public.blob.vercel-storage.com/phoenix_sync.json';
+const BLOB_PUT_API = 'https://blob.vercel-storage.com/phoenix_sync.json';
+const BLOB_TOKEN = 'vercel_blob_rw_5PqzjTKSDbPeRly4_AtikctcAhGDWbp4U86UIQ8rCPFeblz';
 
 // Fetch live centralized cloud data (shared across phone, laptop, tablet)
 export const fetchFromCloud = async () => {
@@ -375,22 +413,26 @@ export const fetchFromCloud = async () => {
       }
     }
 
-    if (json && Array.isArray(json.members) && json.members.length > 0) {
+    if (json && Array.isArray(json.members)) {
+      const deletedIds = getDeletedMemberIds();
+      // Always exclude any member that has been deleted on this device
+      const cloudMembers = json.members.filter(m => !deletedIds.includes(m.id));
       const localMembers = getMembers();
       const lastLocalEdit = parseInt(localStorage.getItem('phoenix_gym_last_edit_time') || '0', 10);
       const now = Date.now();
 
-      // PROTECT RECENT LOCAL CHANGES (within last 30s) if local has at least as many members
-      if (now - lastLocalEdit < 30000 && localMembers.length >= json.members.length) {
+      // PROTECT RECENT LOCAL CHANGES (within last 60s):
+      // Keep local state authoritative and push up to cloud so cloud matches local
+      if (now - lastLocalEdit < 60000) {
         syncToCloud(localMembers, getPayments());
         return { members: localMembers, payments: getPayments() };
       }
 
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.members));
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cloudMembers));
       if (Array.isArray(json.payments)) {
         localStorage.setItem(PAYMENTS_KEY, JSON.stringify(json.payments));
       }
-      return json;
+      return { ...json, members: cloudMembers };
     }
   } catch (err) {
     console.warn('[Cloud Sync Fetch Warning]', err.message);
@@ -401,25 +443,47 @@ export const fetchFromCloud = async () => {
 // Push live centralized cloud data (shared across phone, laptop, tablet)
 export const syncToCloud = async (members, payments) => {
   try {
+    const deletedIds = getDeletedMemberIds();
+    const cleanMembers = (members || getMembers()).filter(m => !deletedIds.includes(m.id));
     const payload = {
-      members: members || getMembers(),
+      members: cleanMembers,
       payments: payments || getPayments(),
       updatedAt: new Date().toISOString()
     };
-    await fetch('/api/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+
+    let pushSuccess = false;
+    try {
+      const res = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) pushSuccess = true;
+    } catch (_) {}
+
+    // Fallback direct PUT to Vercel Blob if serverless API isn't ready
+    if (!pushSuccess) {
+      await fetch(BLOB_PUT_API, {
+        method: 'PUT',
+        headers: {
+          'authorization': `Bearer ${BLOB_TOKEN}`,
+          'x-add-random-suffix': 'false',
+          'x-content-type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+    }
   } catch (err) {
     console.warn('[Cloud Sync Push Warning]', err.message);
   }
 };
 
 export const saveMembers = (members) => {
+  const deletedIds = getDeletedMemberIds();
+  const cleanMembers = members.filter(m => !deletedIds.includes(m.id));
   localStorage.setItem('phoenix_gym_last_edit_time', String(Date.now()));
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(members));
-  syncToCloud(members, getPayments());
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cleanMembers));
+  syncToCloud(cleanMembers, getPayments());
 };
 
 export const getSettings = () => {

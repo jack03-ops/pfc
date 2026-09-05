@@ -30,27 +30,32 @@ export default function Notifications({
   // Compute alerts dynamically from Mock DB
   const alertsList = useMemo(() => {
     const list = [];
-    const today = new Date();
-    const fifteenDaysFromNow = new Date();
-    fifteenDaysFromNow.setDate(today.getDate() + 15);
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const fifteenDaysEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 15, 23, 59, 59, 999);
 
     // 1. Expiring memberships
     members.forEach(m => {
-      if (m.status === 'Active') {
-        const endDate = new Date(m.endDate);
-        if (endDate >= today && endDate <= fifteenDaysFromNow) {
-          const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-          const isUrgent = daysLeft === 1;
-          const isThreeDay = daysLeft === 3;
-          list.push({
-            id: `exp-${m.id}`,
-            type: 'expiration',
-            daysLeft: daysLeft,
-            title: isUrgent ? '🚨 Expires Tomorrow (1 Day Left!)' : isThreeDay ? '⏰ Expires in 3 Days' : `Membership Expiring in ${daysLeft} Days`,
-            message: `${m.fullName} (${m.id})'s ${m.plan} plan expires ${isUrgent ? 'tomorrow' : `in ${daysLeft} days`} on ${m.endDate}.`,
-            member: m,
-            severity: isUrgent ? 'danger' : 'warning'
-          });
+      if (m.status === 'Active' && m.endDate) {
+        const parts = m.endDate.split('-');
+        if (parts.length === 3) {
+          const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+          if (end >= todayStart && end <= fifteenDaysEnd) {
+            const diffTime = end.getTime() - todayStart.getTime();
+            const daysLeft = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+            const isToday = daysLeft === 0;
+            const isUrgent = daysLeft === 1;
+            const isThreeDay = daysLeft === 3;
+            list.push({
+              id: `exp-${m.id}`,
+              type: 'expiration',
+              daysLeft: daysLeft,
+              title: isToday ? '⚠️ Membership Expires TODAY!' : isUrgent ? '🚨 Expires Tomorrow (1 Day Left!)' : isThreeDay ? '⏰ Expires in 3 Days' : `Membership Expiring in ${daysLeft} Days`,
+              message: `${m.fullName} (${m.id})'s ${m.plan} plan expires ${isToday ? 'TODAY' : isUrgent ? 'tomorrow' : `in ${daysLeft} days`} on ${m.endDate}.`,
+              member: m,
+              severity: isToday || isUrgent ? 'danger' : 'warning'
+            });
+          }
         }
       }
     });
