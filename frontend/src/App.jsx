@@ -19,7 +19,9 @@ import {
   initializeDb,
   fetchFromCloud,
   recordMemberReminder,
-  recordMemberWelcomeEmail
+  recordMemberWelcomeEmail,
+  getClearedNotificationIds,
+  saveClearedNotificationIds
 } from './db/mockDb';
 
 export default function App() {
@@ -31,12 +33,62 @@ export default function App() {
   const [welcomeMember, setWelcomeMember] = useState(null);
   const [reminderMemberData, setReminderMemberData] = useState(null);
   const [toast, setToast] = useState(null);
+  const [clearedNotificationIds, setClearedNotificationIds] = useState(() => getClearedNotificationIds());
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => {
       setToast(null);
     }, 4000);
+  };
+
+  // Compute active, un-cleared alerts for Sidebar badge
+  const activeAlertsCount = React.useMemo(() => {
+    const today = new Date();
+    const fifteenDaysFromNow = new Date();
+    fifteenDaysFromNow.setDate(today.getDate() + 15);
+
+    let count = 0;
+    members.forEach(m => {
+      if (m.status === 'Active') {
+        const endDate = new Date(m.endDate);
+        if (endDate >= today && endDate <= fifteenDaysFromNow) {
+          if (!clearedNotificationIds.includes(`exp-${m.id}`)) {
+            count++;
+          }
+        }
+      }
+      if (m.paymentStatus === 'Pending') {
+        if (!clearedNotificationIds.includes(`pend-${m.id}`)) {
+          count++;
+        }
+      }
+    });
+    return count;
+  }, [members, clearedNotificationIds]);
+
+  const handleClearNotification = (id) => {
+    setClearedNotificationIds(prev => {
+      const next = prev.includes(id) ? prev : [...prev, id];
+      saveClearedNotificationIds(next);
+      return next;
+    });
+  };
+
+  const handleClearAllNotifications = (idsToClear) => {
+    setClearedNotificationIds(prev => {
+      const set = new Set([...prev, ...idsToClear]);
+      const next = Array.from(set);
+      saveClearedNotificationIds(next);
+      return next;
+    });
+    showToast('Notifications cleared');
+  };
+
+  const handleRestoreNotifications = () => {
+    setClearedNotificationIds([]);
+    saveClearedNotificationIds([]);
+    showToast('Notifications restored');
   };
 
   // Initialize DB, load state, and sync with centralized cloud database
@@ -270,6 +322,10 @@ export default function App() {
           <Notifications 
             members={members} 
             payments={payments} 
+            clearedIds={clearedNotificationIds}
+            onClearNotification={handleClearNotification}
+            onClearAllNotifications={handleClearAllNotifications}
+            onRestoreNotifications={handleRestoreNotifications}
             onMarkAsPaid={handleMarkAsPaid} 
             onSendReminderEmail={(m, daysLeft) => setReminderMemberData({ member: m, daysLeft })}
             onSendWhatsAppReminder={handleWhatsAppReminderSent}
@@ -318,6 +374,7 @@ export default function App() {
         currentPage={currentPage === 'edit-member' ? 'members' : currentPage} 
         setCurrentPage={setCurrentPage} 
         onLogout={handleLogout} 
+        alertsCount={activeAlertsCount}
       />
 
       {/* Main Container Content */}

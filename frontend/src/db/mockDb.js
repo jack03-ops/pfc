@@ -576,3 +576,23 @@ export const initializeDb = () => {
   getPayments();
   getReminders();
 };
+
+const CLEARED_NOTIFICATIONS_KEY = 'phoenix_gym_cleared_notifications';
+
+export const getClearedNotificationIds = () => {
+  try {
+    const raw = localStorage.getItem(CLEARED_NOTIFICATIONS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+export const saveClearedNotificationIds = (ids) => {
+  try {
+    localStorage.setItem(CLEARED_NOTIFICATIONS_KEY, JSON.stringify(ids));
+  } catch (e) {
+    console.error(e);
+  }
+};
+

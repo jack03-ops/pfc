@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import phoenixLogo from '../assets/phoenix_logo.png';
 
-export default function Sidebar({ currentPage, setCurrentPage, onLogout }) {
+export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsCount = 0 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const menuItems = [
@@ -119,9 +119,9 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout }) {
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-zinc-400'}`} />
                   <span className="text-sm">{item.label}</span>
-                  {item.id === 'notifications' && (
+                  {item.id === 'notifications' && alertsCount > 0 && (
                     <span className="ml-auto bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                      3
+                      {alertsCount}
                     </span>
                   )}
                 </button>

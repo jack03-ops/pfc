@@ -9,9 +9,9 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     id: '',
     fullName: '',
-    phone: '+91 ',
-    whatsapp: '+91 ',
-    emergencyContact: '+91 ',
+    phone: '',
+    whatsapp: '',
+    emergencyContact: '',
     email: '',
     village: '',
     address: '',
@@ -40,6 +40,39 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
   const [errors, setErrors] = useState({});
   const [formBannerError, setFormBannerError] = useState(null);
   const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
+
+  // Helper to extract clean 10 mobile digits without duplicated +91
+  const extract10Digits = (val) => {
+    if (!val) return '';
+    let str = String(val).trim();
+    if (str.startsWith('+91')) {
+      str = str.replace(/^\+91\s*/, '');
+    }
+    let digits = str.replace(/\D/g, '');
+    if (digits.length > 10 && digits.startsWith('91')) {
+      digits = digits.slice(2);
+    }
+    return digits.slice(0, 10);
+  };
+
+  const handlePhoneInputChange = (raw, name) => {
+    let str = String(raw || '').trim();
+    if (str.startsWith('+91')) {
+      str = str.replace(/^\+91\s*/, '');
+    }
+    let digits = str.replace(/\D/g, '');
+    if (digits.length > 10 && digits.startsWith('91')) {
+      digits = digits.slice(2);
+    }
+    digits = digits.slice(0, 10);
+    setFormData(prev => ({
+      ...prev,
+      [name]: digits ? `+91 ${digits}` : ''
+    }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
+  };
 
   // Auto-calculate expiry date & default plan price based on selected Plan
   useEffect(() => {
@@ -106,18 +139,11 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
   // Load existing member details on edit
   useEffect(() => {
     if (isEditMode && memberToEdit) {
-      const formatPhone = (val) => {
-        if (!val) return '+91 ';
-        if (val.startsWith('+91 ')) return val;
-        const cleaned = val.replace(/^\+91\s*/, '').replace(/\D/g, '');
-        return '+91 ' + cleaned;
-      };
-
       setFormData({
         ...memberToEdit,
-        phone: formatPhone(memberToEdit.phone),
-        whatsapp: formatPhone(memberToEdit.whatsapp),
-        emergencyContact: formatPhone(memberToEdit.emergencyContact),
+        phone: memberToEdit.phone || '',
+        whatsapp: memberToEdit.whatsapp || '',
+        emergencyContact: memberToEdit.emergencyContact || '',
         email: memberToEdit.email || '',
         dob: memberToEdit.dob || '',
         height: memberToEdit.height ? String(memberToEdit.height) : '',
@@ -133,23 +159,6 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
       });
     }
   }, [isEditMode, memberToEdit]);
-
-  const handlePhoneChange = (e, name) => {
-    let raw = e.target.value;
-    let digits = raw.replace(/\D/g, '');
-    if (digits.startsWith('91') && digits.length > 10) {
-      digits = digits.slice(2);
-    }
-    digits = digits.slice(0, 10);
-    const formatted = digits ? `+91 ${digits}` : '+91 ';
-    setFormData(prev => ({
-      ...prev,
-      [name]: formatted
-    }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -168,16 +177,14 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
       tempErrors.fullName = 'Full Name is required';
     }
     
-    const phoneDigits = String(formData.phone || '').replace(/\D/g, '').replace(/^91/, '');
+    const phoneDigits = extract10Digits(formData.phone);
     if (phoneDigits.length !== 10) {
-      tempErrors.phone = 'Valid 10-digit mobile number required';
+      tempErrors.phone = 'Valid 10-digit mobile number required (e.g. 9487817301)';
     }
 
-    if (formData.whatsapp && formData.whatsapp.trim() !== '+91' && formData.whatsapp.trim() !== '') {
-      const waDigits = String(formData.whatsapp || '').replace(/\D/g, '').replace(/^91/, '');
-      if (waDigits.length > 0 && waDigits.length !== 10) {
-        tempErrors.whatsapp = 'Valid 10-digit WhatsApp number required or leave blank';
-      }
+    const waDigits = extract10Digits(formData.whatsapp);
+    if (waDigits && waDigits.length !== 10) {
+      tempErrors.whatsapp = 'Valid 10-digit WhatsApp number required or leave blank';
     }
 
     setErrors(tempErrors);
@@ -195,14 +202,16 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
     e.preventDefault();
     if (!validate()) return;
 
-    const phoneDigits = String(formData.phone || '').replace(/\D/g, '').replace(/^91/, '');
-    const waDigits = String(formData.whatsapp || '').replace(/\D/g, '').replace(/^91/, '');
+    const phoneDigits = extract10Digits(formData.phone);
+    const waDigits = extract10Digits(formData.whatsapp);
+    const emDigits = extract10Digits(formData.emergencyContact);
 
     const sanitizedData = {
       ...formData,
       fullName: formData.fullName.trim(),
       phone: `+91 ${phoneDigits}`,
       whatsapp: waDigits ? `+91 ${waDigits}` : `+91 ${phoneDigits}`,
+      emergencyContact: emDigits ? `+91 ${emDigits}` : `+91 ${phoneDigits}`,
       village: formData.village?.trim() || 'Rampur',
       age: Number(formData.age) || 25,
       amountPaid: formData.amountPaid ? Number(formData.amountPaid) : 1000
@@ -330,15 +339,20 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
               {/* Phone Number */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Contact No. *</label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={(e) => handlePhoneChange(e, 'phone')}
-                  maxLength="14"
-                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
-                  placeholder="e.g. +91 9876543210"
-                />
+                <div className="flex items-center rounded-xl border border-zinc-900 bg-zinc-950/80 overflow-hidden focus-within:border-red-500 transition-all">
+                  <span className="px-3 py-2.5 bg-zinc-900 border-r border-zinc-900 text-slate-400 font-bold text-xs select-none shrink-0">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={extract10Digits(formData.phone)}
+                    onChange={(e) => handlePhoneInputChange(e.target.value, 'phone')}
+                    maxLength={10}
+                    className="w-full px-3.5 py-2.5 bg-transparent text-xs text-white focus:outline-none placeholder:text-zinc-600 font-medium"
+                    placeholder="94878 17301"
+                  />
+                </div>
                 {errors.phone && (
                   <div className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
@@ -350,15 +364,20 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
               {/* Emergency Contact No. */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Emergency Contact No.</label>
-                <input
-                  type="text"
-                  name="emergencyContact"
-                  value={formData.emergencyContact}
-                  onChange={(e) => handlePhoneChange(e, 'emergencyContact')}
-                  maxLength="14"
-                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
-                  placeholder="Parent / Guardian No."
-                />
+                <div className="flex items-center rounded-xl border border-zinc-900 bg-zinc-950/80 overflow-hidden focus-within:border-red-500 transition-all">
+                  <span className="px-3 py-2.5 bg-zinc-900 border-r border-zinc-900 text-slate-400 font-bold text-xs select-none shrink-0">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    name="emergencyContact"
+                    value={extract10Digits(formData.emergencyContact)}
+                    onChange={(e) => handlePhoneInputChange(e.target.value, 'emergencyContact')}
+                    maxLength={10}
+                    className="w-full px-3.5 py-2.5 bg-transparent text-xs text-white focus:outline-none placeholder:text-zinc-600 font-medium"
+                    placeholder="Parent / Guardian No."
+                  />
+                </div>
               </div>
 
               {/* E-mail Address */}
@@ -377,15 +396,20 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
               {/* WhatsApp Number */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">WhatsApp Number</label>
-                <input
-                  type="text"
-                  name="whatsapp"
-                  value={formData.whatsapp}
-                  onChange={(e) => handlePhoneChange(e, 'whatsapp')}
-                  maxLength="14"
-                  className="w-full px-3.5 py-2.5 bg-zinc-950/80 border border-zinc-900 rounded-xl text-xs text-white focus:outline-none focus:border-red-500 transition-all"
-                  placeholder="Same as contact or separate"
-                />
+                <div className="flex items-center rounded-xl border border-zinc-900 bg-zinc-950/80 overflow-hidden focus-within:border-red-500 transition-all">
+                  <span className="px-3 py-2.5 bg-zinc-900 border-r border-zinc-900 text-slate-400 font-bold text-xs select-none shrink-0">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    name="whatsapp"
+                    value={extract10Digits(formData.whatsapp)}
+                    onChange={(e) => handlePhoneInputChange(e.target.value, 'whatsapp')}
+                    maxLength={10}
+                    className="w-full px-3.5 py-2.5 bg-transparent text-xs text-white focus:outline-none placeholder:text-zinc-600 font-medium"
+                    placeholder="Leave blank to use Contact No."
+                  />
+                </div>
               </div>
 
               {/* Village */}

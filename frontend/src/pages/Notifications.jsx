@@ -8,10 +8,25 @@ import {
   MessageSquare,
   AlertTriangle,
   Mail,
-  Clock
+  Clock,
+  Trash2,
+  CheckCheck,
+  RotateCcw,
+  X
 } from 'lucide-react';
 
-export default function Notifications({ members, payments, onMarkAsPaid, onSendReminderEmail, onSendWhatsAppReminder, setPage }) {
+export default function Notifications({ 
+  members, 
+  payments, 
+  clearedIds = [],
+  onClearNotification,
+  onClearAllNotifications,
+  onRestoreNotifications,
+  onMarkAsPaid, 
+  onSendReminderEmail, 
+  onSendWhatsAppReminder, 
+  setPage 
+}) {
   // Compute alerts dynamically from Mock DB
   const alertsList = useMemo(() => {
     const list = [];
@@ -69,6 +84,15 @@ export default function Notifications({ members, payments, onMarkAsPaid, onSendR
     return list.slice(0, 8); // Top 8 relevant notifications
   }, [members]);
 
+  // Filter out cleared/dismissed alerts
+  const visibleAlerts = useMemo(() => {
+    return alertsList.filter(a => !clearedIds?.includes(a.id));
+  }, [alertsList, clearedIds]);
+
+  const clearedCount = useMemo(() => {
+    return (clearedIds || []).filter(id => alertsList.some(a => a.id === id)).length;
+  }, [alertsList, clearedIds]);
+
   const handleWhatsAppAlert = (member, daysLeft) => {
     const rawPhone = member.whatsapp || member.phone || '';
     const cleanPhone = String(rawPhone).replace(/\D/g, '').replace(/^91/, '');
@@ -106,9 +130,47 @@ export default function Notifications({ members, payments, onMarkAsPaid, onSendR
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-60px)] md:max-h-[calc(100vh-80px)]">
+      {/* Top Header with Clear All & Restore controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-4xl pb-2 border-b border-zinc-900">
+        <div>
+          <h2 className="text-base font-black uppercase text-white tracking-wide flex items-center gap-2">
+            <Bell className="w-5 h-5 text-red-500" />
+            Notification Center
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {visibleAlerts.length} active notification{visibleAlerts.length === 1 ? '' : 's'}
+            {clearedCount > 0 && <span className="text-slate-500"> • {clearedCount} cleared</span>}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {visibleAlerts.length > 0 && onClearAllNotifications && (
+            <button
+              onClick={() => onClearAllNotifications(visibleAlerts.map(a => a.id))}
+              className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-slate-300 hover:text-white border border-zinc-800 hover:border-red-500/40 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              title="Clear all active notifications"
+            >
+              <CheckCheck className="w-3.5 h-3.5 text-red-500" />
+              <span>Clear Notifications</span>
+            </button>
+          )}
+
+          {clearedCount > 0 && onRestoreNotifications && (
+            <button
+              onClick={onRestoreNotifications}
+              className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-slate-400 hover:text-slate-200 border border-zinc-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Restore previously cleared notifications"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+              <span>Restore Cleared ({clearedCount})</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="glass-panel rounded-2xl border border-zinc-900 divide-y divide-zinc-900/80 shadow-2xl max-w-4xl">
-        {alertsList.length > 0 ? (
-          alertsList.map((alert) => {
+        {visibleAlerts.length > 0 ? (
+          visibleAlerts.map((alert) => {
             const Icon = 
               alert.type === 'expiration' ? Hourglass : 
               alert.type === 'payment' ? CreditCard : 
@@ -198,14 +260,35 @@ export default function Notifications({ members, payments, onMarkAsPaid, onSendR
                       Receive Fee
                     </button>
                   )}
+
+                  {/* Individual Clear / Dismiss Notification button */}
+                  {onClearNotification && (
+                    <button
+                      onClick={() => onClearNotification(alert.id)}
+                      className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer ml-1"
+                      title="Dismiss this notification"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             );
           })
         ) : (
-          <div className="p-12 text-center text-slate-500 text-xs">
-            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
-            No system notifications or pending alerts found. All clear!
+          <div className="p-12 text-center text-slate-500 text-xs flex flex-col items-center justify-center space-y-3">
+            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+            <p className="font-bold text-slate-300">All notifications cleared!</p>
+            <p className="text-[11px] text-slate-500">No active system alerts or notifications at this time.</p>
+            {clearedCount > 0 && onRestoreNotifications && (
+              <button
+                onClick={onRestoreNotifications}
+                className="mt-2 px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-slate-300 hover:text-white border border-zinc-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Restore {clearedCount} Cleared Notification{clearedCount === 1 ? '' : 's'}</span>
+              </button>
+            )}
           </div>
         )}
       </div>
