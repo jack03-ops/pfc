@@ -32,8 +32,8 @@ export default function App() {
   const [payments, setPayments] = useState([]);
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [toast, setToast] = useState(null);
-  const [welcomeModalMember, setWelcomeModalMember] = useState(null);
-  const [reminderModalData, setReminderModalData] = useState(null);
+  const [welcomeMember, setWelcomeMember] = useState(null);
+  const [reminderMemberData, setReminderMemberData] = useState(null);
   const [clearedNotificationIds, setClearedNotificationIds] = useState(() => getClearedNotificationIds());
 
   const showToast = (message, type = 'info') => {
