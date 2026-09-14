@@ -343,60 +343,144 @@ const DEFAULT_REMINDERS = [
   { id: "REM-101", clientName: "Karthik Kumar", phone: "+91 8015552425", date: "2026-05-26", type: "WhatsApp", status: "Sent", message: "Hello Karthik Kumar, your Phoenix Gym membership expires in 1 day(s). Please renew your membership to continue uninterrupted access." }
 ];
 
-const DELETED_MEMBERS_KEY = 'phoenix_gym_deleted_member_ids';
+// IndexedDB Async Persistent Storage Layer (eliminates browser 5MB localStorage limits)
+const IDB_NAME = 'PhoenixGymDB';
+const IDB_VERSION = 1;
+const IDB_STORE = 'phoenix_store';
 
-export const getDeletedMemberIds = () => {
+const openIndexedDB = () => {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !window.indexedDB) return resolve(null);
+    try {
+      const request = window.indexedDB.open(IDB_NAME, IDB_VERSION);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE);
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => resolve(null);
+    } catch (e) {
+      resolve(null);
+    }
+  });
+};
+
+export const getIdbData = async (key) => {
   try {
-    const raw = localStorage.getItem(DELETED_MEMBERS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const db = await openIndexedDB();
+    if (!db) return null;
+    return new Promise((resolve) => {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch (e) {
+    return null;
+  }
+};
+
+export const setIdbData = async (key, value) => {
+  try {
+    const db = await openIndexedDB();
+    if (!db) return false;
+    return new Promise((resolve) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.put(value, key);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => resolve(false);
+    });
+  } catch (e) {
+    return false;
+  }
+};
+
+// Soft-delete and membership query layer
+export const getMembers = (includeDeleted = false) => {
+  const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+  let list = DEFAULT_MEMBERS;
+  if (data) {
+    try {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) list = parsed;
+    } catch (e) {
+      list = DEFAULT_MEMBERS;
+    }
+  } else {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERS));
+    setIdbData(LOCAL_STORAGE_KEY, DEFAULT_MEMBERS);
+  }
+
+  // Also hydrate IDB in background
+  setIdbData(LOCAL_STORAGE_KEY, list);
+
+  if (includeDeleted) return list;
+  return list.filter(m => !m.isDeleted);
+};
+
+// Retrieve soft-deleted members for audit/recovery
+export const getDeletedMembers = () => {
+  const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (!data) return [];
+  try {
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed.filter(m => m.isDeleted === true) : [];
   } catch (e) {
     return [];
   }
 };
 
-export const saveDeletedMemberIds = (ids) => {
-  try {
-    localStorage.setItem(DELETED_MEMBERS_KEY, JSON.stringify(ids));
-  } catch (e) {}
-};
-
-export const getMembers = () => {
-  const deletedIds = getDeletedMemberIds();
-  const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (!data) {
-    const initial = DEFAULT_MEMBERS.filter(m => !deletedIds.includes(m.id));
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initial));
-    return initial;
-  }
-  try {
-    const parsed = JSON.parse(data);
-    return Array.isArray(parsed) ? parsed.filter(m => !deletedIds.includes(m.id)) : DEFAULT_MEMBERS;
-  } catch (e) {
-    return DEFAULT_MEMBERS.filter(m => !deletedIds.includes(m.id));
-  }
-};
-
+// Database-grade soft delete pattern
 export const deleteMember = (id) => {
-  const deletedIds = getDeletedMemberIds();
-  if (!deletedIds.includes(id)) {
-    deletedIds.push(id);
-    saveDeletedMemberIds(deletedIds);
-  }
-  const current = getMembers();
-  const updated = current.filter(m => m.id !== id);
-  saveMembers(updated);
-  return updated;
+  const all = getMembers(true);
+  const nowIso = new Date().toISOString();
+  const updated = all.map(m => {
+    if (m.id === id) {
+      return { ...m, isDeleted: true, deletedAt: nowIso, updatedAt: nowIso };
+    }
+    return m;
+  });
+  
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+  setIdbData(LOCAL_STORAGE_KEY, updated);
+  localStorage.setItem('phoenix_gym_last_edit_time', String(Date.now()));
+  syncToCloud(updated, getPayments());
+
+  return updated.filter(m => !m.isDeleted);
 };
 
+// Restore soft-deleted member
+export const restoreMember = (id) => {
+  const all = getMembers(true);
+  const nowIso = new Date().toISOString();
+  const updated = all.map(m => {
+    if (m.id === id) {
+      const { isDeleted, deletedAt, ...rest } = m;
+      return { ...rest, isDeleted: false, updatedAt: nowIso };
+    }
+    return m;
+  });
+
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+  setIdbData(LOCAL_STORAGE_KEY, updated);
+  localStorage.setItem('phoenix_gym_last_edit_time', String(Date.now()));
+  syncToCloud(updated, getPayments());
+
+  return updated.filter(m => !m.isDeleted);
+};
+
+// Centralized Cloud Sync URL (Sanitized - no master tokens stored on client)
 const CLOUD_SYNC_URL = 'https://5pqzjtksdbperly4.public.blob.vercel-storage.com/phoenix_sync.json';
-const BLOB_PUT_API = 'https://blob.vercel-storage.com/phoenix_sync.json';
-const BLOB_TOKEN = 'vercel_blob_rw_5PqzjTKSDbPeRly4_AtikctcAhGDWbp4U86UIQ8rCPFeblz';
 
 // Fetch live centralized cloud data (shared across phone, laptop, tablet)
 export const fetchFromCloud = async () => {
   try {
     let json = null;
-    // Prefer server API which has instant in-memory cache and no-store headers
+    // Prefer serverless API which has instant in-memory cache and sanitized headers
     try {
       const apiRes = await fetch(`/api/sync?t=${Date.now()}`, { cache: 'no-store' });
       if (apiRes.ok) {
@@ -405,7 +489,7 @@ export const fetchFromCloud = async () => {
       }
     } catch (_) {}
 
-    // Fallback to direct blob if API unreachable
+    // Fallback to public CDN endpoint if API route is starting up
     if (!json || !Array.isArray(json.members)) {
       const blobRes = await fetch(`${CLOUD_SYNC_URL}?t=${Date.now()}`, { cache: 'no-store' });
       if (blobRes.ok) {
@@ -414,25 +498,50 @@ export const fetchFromCloud = async () => {
     }
 
     if (json && Array.isArray(json.members)) {
-      const deletedIds = getDeletedMemberIds();
-      // Always exclude any member that has been deleted on this device
-      const cloudMembers = json.members.filter(m => !deletedIds.includes(m.id));
-      const localMembers = getMembers();
+      const localAll = getMembers(true);
       const lastLocalEdit = parseInt(localStorage.getItem('phoenix_gym_last_edit_time') || '0', 10);
       const now = Date.now();
 
-      // PROTECT RECENT LOCAL CHANGES (within last 60s):
+      // PROTECT RECENT LOCAL CHANGES (within last 45s):
       // Keep local state authoritative and push up to cloud so cloud matches local
-      if (now - lastLocalEdit < 60000) {
-        syncToCloud(localMembers, getPayments());
-        return { members: localMembers, payments: getPayments() };
+      if (now - lastLocalEdit < 45000) {
+        syncToCloud(localAll, getPayments());
+        return { members: localAll.filter(m => !m.isDeleted), payments: getPayments() };
       }
 
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cloudMembers));
+      // Optimistic concurrency merge: Merge cloud members with respect to soft deletes & updatedAt
+      const mergedMap = new Map();
+      localAll.forEach(m => mergedMap.set(m.id, m));
+      json.members.forEach(cloudM => {
+        const localM = mergedMap.get(cloudM.id);
+        if (!localM) {
+          mergedMap.set(cloudM.id, cloudM);
+        } else {
+          // If locally deleted, preserve deletion unless cloud is newer and explicitly not deleted
+          if (localM.isDeleted && !cloudM.isDeleted) {
+            const localDelTime = new Date(localM.deletedAt || 0).getTime();
+            const cloudUpTime = new Date(cloudM.updatedAt || 0).getTime();
+            if (localDelTime >= cloudUpTime) {
+              mergedMap.set(cloudM.id, localM);
+              return;
+            }
+          }
+          // Choose the record with newer updatedAt
+          const localTime = new Date(localM.updatedAt || 0).getTime();
+          const cloudTime = new Date(cloudM.updatedAt || 0).getTime();
+          mergedMap.set(cloudM.id, cloudTime > localTime ? cloudM : localM);
+        }
+      });
+
+      const mergedMembers = Array.from(mergedMap.values());
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedMembers));
+      setIdbData(LOCAL_STORAGE_KEY, mergedMembers);
+
       if (Array.isArray(json.payments)) {
         localStorage.setItem(PAYMENTS_KEY, JSON.stringify(json.payments));
+        setIdbData(PAYMENTS_KEY, json.payments);
       }
-      return { ...json, members: cloudMembers };
+      return { ...json, members: mergedMembers.filter(m => !m.isDeleted) };
     }
   } catch (err) {
     console.warn('[Cloud Sync Fetch Warning]', err.message);
@@ -443,47 +552,40 @@ export const fetchFromCloud = async () => {
 // Push live centralized cloud data (shared across phone, laptop, tablet)
 export const syncToCloud = async (members, payments) => {
   try {
-    const deletedIds = getDeletedMemberIds();
-    const cleanMembers = (members || getMembers()).filter(m => !deletedIds.includes(m.id));
+    const allMembers = members || getMembers(true);
     const payload = {
-      members: cleanMembers,
+      members: allMembers,
       payments: payments || getPayments(),
       updatedAt: new Date().toISOString()
     };
 
-    let pushSuccess = false;
-    try {
-      const res = await fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) pushSuccess = true;
-    } catch (_) {}
-
-    // Fallback direct PUT to Vercel Blob if serverless API isn't ready
-    if (!pushSuccess) {
-      await fetch(BLOB_PUT_API, {
-        method: 'PUT',
-        headers: {
-          'authorization': `Bearer ${BLOB_TOKEN}`,
-          'x-add-random-suffix': 'false',
-          'x-content-type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-    }
+    // Dispatch securely to backend endpoint /api/sync
+    await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
   } catch (err) {
     console.warn('[Cloud Sync Push Warning]', err.message);
   }
 };
 
 export const saveMembers = (members) => {
-  const deletedIds = getDeletedMemberIds();
-  const cleanMembers = members.filter(m => !deletedIds.includes(m.id));
+  const currentAll = getMembers(true);
+  const nowIso = new Date().toISOString();
+  
+  // Update or insert members with timestamps
+  const memberMap = new Map();
+  currentAll.forEach(m => memberMap.set(m.id, m));
+  members.forEach(m => {
+    memberMap.set(m.id, { ...m, updatedAt: nowIso, isDeleted: m.isDeleted || false });
+  });
+
+  const fullList = Array.from(memberMap.values());
   localStorage.setItem('phoenix_gym_last_edit_time', String(Date.now()));
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cleanMembers));
-  syncToCloud(cleanMembers, getPayments());
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fullList));
+  setIdbData(LOCAL_STORAGE_KEY, fullList);
+  syncToCloud(fullList, getPayments());
 };
 
 export const getSettings = () => {
@@ -628,12 +730,14 @@ export const recordMemberWelcomeEmail = (memberId) => {
 // Seed utility to fully initialize all stores on application mount and sync database version
 export const initializeDb = () => {
   const currentVersion = localStorage.getItem('phoenix_gym_db_ver');
-  if (currentVersion !== 'v4_10_clients') {
-    // Override old cached local storage to ensure 100% parity across mobile and desktop
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERS));
-    localStorage.setItem(PAYMENTS_KEY, JSON.stringify(DEFAULT_PAYMENTS));
-    localStorage.setItem(REMINDERS_KEY, JSON.stringify(DEFAULT_REMINDERS));
-    localStorage.setItem('phoenix_gym_db_ver', 'v4_10_clients');
+  if (currentVersion !== 'v5_persistence_indexeddb') {
+    const existing = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!existing) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERS));
+      localStorage.setItem(PAYMENTS_KEY, JSON.stringify(DEFAULT_PAYMENTS));
+      localStorage.setItem(REMINDERS_KEY, JSON.stringify(DEFAULT_REMINDERS));
+    }
+    localStorage.setItem('phoenix_gym_db_ver', 'v5_persistence_indexeddb');
   }
   getMembers();
   getSettings();

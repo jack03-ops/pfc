@@ -14,7 +14,7 @@ export const runAutomatedReminders = async () => {
   let dispatchedCount = 0;
   const logs = [];
 
-  for (const daysLeft of [3, 1]) {
+  for (const daysLeft of [3, 2, 1, 0]) {
     const targetDate = new Date(today.getTime() + daysLeft * DAY_MS);
     const nextDate = new Date(targetDate.getTime() + DAY_MS);
     const members = await Member.find({ activeStatus: true, endDate: { $gte: targetDate, $lt: nextDate } });

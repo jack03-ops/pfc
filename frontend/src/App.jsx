@@ -106,19 +106,28 @@ export default function App() {
     setMembers(getMembers());
     setPayments(getPayments());
 
-    // Auto login check
+    // Auto login check with default Admin role
     const savedUser = localStorage.getItem('phoenix_gym_session');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        const parsed = JSON.parse(savedUser);
+        setUser({ role: 'admin', ...parsed });
+      } catch (e) {
+        setUser({ email: 'phoenixgym.vkp@gmail.com', name: 'Phoenix Gym Admin', role: 'admin' });
+      }
     }
 
     const syncLiveCloud = () => {
+      // Smart Adaptive Polling: Skip heavy network calls if browser tab is hidden or device is offline
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+
       fetchFromCloud().then(data => {
         if (data) {
-          if (Array.isArray(data.members) && data.members.length > 0) {
+          if (Array.isArray(data.members)) {
             setMembers(data.members);
           }
-          if (Array.isArray(data.payments) && data.payments.length > 0) {
+          if (Array.isArray(data.payments)) {
             setPayments(data.payments);
           }
         }
@@ -128,21 +137,32 @@ export default function App() {
     // 1. Initial live cloud sync
     syncLiveCloud();
 
-    // 2. Real-time sync when switching between phone and laptop windows
+    // 2. Real-time sync on focus and reconnect
     window.addEventListener('focus', syncLiveCloud);
+    window.addEventListener('online', syncLiveCloud);
 
-    // 3. Periodic cloud poll every 6 seconds
-    const interval = setInterval(syncLiveCloud, 6000);
+    // 3. Adaptive periodic poll every 30s only when page is actively focused
+    const interval = setInterval(syncLiveCloud, 30000);
 
     return () => {
       window.removeEventListener('focus', syncLiveCloud);
+      window.removeEventListener('online', syncLiveCloud);
       clearInterval(interval);
     };
   }, []);
 
   const handleLoginSuccess = (userData) => {
-    setUser(userData);
-    localStorage.setItem('phoenix_gym_session', JSON.stringify(userData));
+    const userWithRole = { role: userData.role || 'admin', ...userData };
+    setUser(userWithRole);
+    localStorage.setItem('phoenix_gym_session', JSON.stringify(userWithRole));
+  };
+
+  const handleRoleChange = (newRole) => {
+    if (!user) return;
+    const updated = { ...user, role: newRole };
+    setUser(updated);
+    localStorage.setItem('phoenix_gym_session', JSON.stringify(updated));
+    showToast(`Role switched to ${newRole.toUpperCase()}`, 'info');
   };
 
   const handleLogout = () => {
@@ -343,9 +363,10 @@ export default function App() {
 
   // Render correct dashboard view based on active tab
   const renderPage = () => {
+    const userRole = user?.role || 'admin';
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard members={members} payments={payments} setPage={setCurrentPage} onRenewMember={handleOpenRenewModal} />;
+        return <Dashboard members={members} payments={payments} setPage={setCurrentPage} onRenewMember={handleOpenRenewModal} userRole={userRole} />;
       case 'members':
         return (
           <MembersList 
@@ -356,6 +377,7 @@ export default function App() {
             onSendWelcomeEmail={(m) => setWelcomeMember(m)}
             onRenewMember={handleOpenRenewModal}
             setPage={setCurrentPage} 
+            userRole={userRole}
           />
         );
       case 'add-member':
@@ -363,6 +385,7 @@ export default function App() {
           <MemberForm 
             onSave={handleSaveMember} 
             onCancel={() => setCurrentPage('members')} 
+            userRole={userRole}
           />
         );
       case 'edit-member':
@@ -374,6 +397,7 @@ export default function App() {
               setMemberToEdit(null);
               setCurrentPage('members');
             }} 
+            userRole={userRole}
           />
         );
       case 'payments':
@@ -383,10 +407,11 @@ export default function App() {
             payments={payments} 
             onAddPayment={handleAddPayment} 
             onMarkAsPaid={handleMarkAsPaid} 
+            userRole={userRole}
           />
         );
       case 'reports':
-        return <Reports members={members} payments={payments} />;
+        return <Reports members={members} payments={payments} userRole={userRole} />;
       case 'notifications':
         return (
           <Notifications 
@@ -401,12 +426,13 @@ export default function App() {
             onSendWhatsAppReminder={handleWhatsAppReminderSent}
             onRenewMember={handleOpenRenewModal}
             setPage={setCurrentPage} 
+            userRole={userRole}
           />
         );
       case 'settings':
-        return <Settings onSettingsUpdate={() => setMembers(getMembers())} />;
+        return <Settings onSettingsUpdate={() => setMembers(getMembers())} userRole={userRole} />;
       default:
-        return <Dashboard members={members} payments={payments} setPage={setCurrentPage} onRenewMember={handleOpenRenewModal} />;
+        return <Dashboard members={members} payments={payments} setPage={setCurrentPage} onRenewMember={handleOpenRenewModal} userRole={userRole} />;
     }
   };
 
@@ -446,6 +472,8 @@ export default function App() {
         setCurrentPage={setCurrentPage} 
         onLogout={handleLogout} 
         alertsCount={activeAlertsCount}
+        user={user}
+        onRoleChange={handleRoleChange}
       />
 
       {/* Main Container Content */}

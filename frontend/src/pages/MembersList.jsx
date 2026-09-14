@@ -20,7 +20,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 
-export default function MembersList({ members, onDeleteMember, onToggleStatus, onEditMember, onSendWelcomeEmail, onRenewMember, setPage }) {
+export default function MembersList({ members, onDeleteMember, onToggleStatus, onEditMember, onSendWelcomeEmail, onRenewMember, setPage, userRole = 'admin' }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchField, setSearchField] = useState('all'); // all, name, id, phone, village
   const [statusFilter, setStatusFilter] = useState('all'); // all, active, inactive, expiring, pending
@@ -398,13 +398,15 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                           </button>
 
                           {/* Edit button */}
-                          <button
-                            onClick={() => onEditMember(member)}
-                            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-zinc-900 rounded-lg transition-all cursor-pointer"
-                            title="Edit Profile"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
+                          {userRole !== 'trainer' && (
+                            <button
+                              onClick={() => onEditMember(member)}
+                              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-zinc-900 rounded-lg transition-all cursor-pointer"
+                              title="Edit Profile"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                          )}
                           
                           {/* Send Welcome Email button */}
                           {member.email && (
@@ -417,14 +419,16 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                             </button>
                           )}
 
-                          {/* Delete button */}
-                          <button
-                            onClick={() => onDeleteMember(member.id)}
-                            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
-                            title="Delete Member"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {/* Delete button (Admin only) */}
+                          {userRole === 'admin' && (
+                            <button
+                              onClick={() => onDeleteMember(member.id)}
+                              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
+                              title="Delete Member (Soft Delete)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

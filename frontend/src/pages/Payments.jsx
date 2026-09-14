@@ -7,22 +7,35 @@ import {
   AlertCircle, 
   CheckCircle2, 
   Clock, 
-  Receipt 
+  Receipt,
+  QrCode,
+  Copy
 } from 'lucide-react';
 import { getSettings } from '../db/mockDb';
 import ReceiptModal from '../components/ReceiptModal';
 
-export default function Payments({ members, payments, onAddPayment, onMarkAsPaid }) {
+export default function Payments({ members, payments, onAddPayment, onMarkAsPaid, userRole = 'admin' }) {
   const settings = getSettings();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [utrRef, setUtrRef] = useState('');
   const [newPayment, setNewPayment] = useState({
     clientId: '',
     amount: '',
     method: 'UPI',
     plan: 'Monthly'
   });
+
+  const upiTxnRef = useMemo(() => `TXN-${Date.now().toString().slice(-6)}`, [newPayment.clientId, newPayment.amount]);
+  const dynamicUpiUrl = useMemo(() => {
+    const fee = Number(newPayment.amount) || 1000;
+    const cid = newPayment.clientId || 'PXM';
+    return `upi://pay?pa=phoenixgym.vkp@oksbi&pn=Phoenix%20Fitness%20Centre&am=${fee}&tr=${upiTxnRef}&tn=Fee_${cid}&cu=INR`;
+  }, [newPayment.amount, newPayment.clientId, upiTxnRef]);
+  const qrCodeUrl = useMemo(() => {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(dynamicUpiUrl)}`;
+  }, [dynamicUpiUrl]);
   
   // Pending members compute
   const pendingMembers = useMemo(() => {
@@ -72,7 +85,8 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
       clientName: memberObj.fullName,
       amount: Number(newPayment.amount),
       method: newPayment.method,
-      plan: newPayment.plan
+      plan: newPayment.plan,
+      notes: utrRef ? `UTR: ${utrRef}` : 'Manual fee collection'
     });
 
     setNewPayment({
@@ -81,6 +95,7 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
       method: 'UPI',
       plan: 'Monthly'
     });
+    setUtrRef('');
     setShowAddForm(false);
   };
 
@@ -181,7 +196,39 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
               </select>
             </div>
 
-            <div className="flex items-end gap-2">
+            {/* Dynamic UPI QR Code for instant desk scanning */}
+            {newPayment.method === 'UPI' && (
+              <div className="md:col-span-2 p-3.5 bg-zinc-950 border border-red-500/30 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <QrCode className="w-3.5 h-3.5 text-red-400" />
+                    <span className="text-[11px] font-bold text-white uppercase tracking-wider">Dynamic QR Code</span>
+                  </div>
+                  <span className="text-[9px] font-mono px-2 py-0.5 bg-red-950/60 text-red-300 border border-red-500/30 rounded">
+                    Ref: {upiTxnRef}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="p-1.5 bg-white rounded-lg shadow shrink-0">
+                    <img src={qrCodeUrl} alt="UPI QR" className="w-20 h-20 object-contain" />
+                  </div>
+                  <div className="flex-1 space-y-1 text-[11px]">
+                    <p className="text-zinc-400">VPA: <strong className="text-white font-mono">phoenixgym.vkp@oksbi</strong></p>
+                    <p className="text-zinc-400">Amount: <strong className="text-emerald-400 font-bold">₹{newPayment.amount || 1000}</strong></p>
+                    <input
+                      type="text"
+                      value={utrRef}
+                      onChange={(e) => setUtrRef(e.target.value)}
+                      placeholder="Enter 12-digit UTR from GPay / PhonePe"
+                      className="w-full mt-1 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg text-[10px] text-white font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-end gap-2 md:col-span-2">
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}

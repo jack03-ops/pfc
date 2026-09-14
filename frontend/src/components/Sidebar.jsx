@@ -14,10 +14,11 @@ import {
 } from 'lucide-react';
 import phoenixLogo from '../assets/phoenix_logo.png';
 
-export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsCount = 0 }) {
+export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsCount = 0, user, onRoleChange }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const userRole = user?.role || 'admin';
 
-  const menuItems = [
+  const allMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'members', label: 'Members List', icon: Users },
     { id: 'add-member', label: 'Add Member', icon: UserPlus },
@@ -26,6 +27,13 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
+
+  const menuItems = allMenuItems.filter(item => {
+    if (userRole === 'trainer') {
+      return ['dashboard', 'members', 'notifications'].includes(item.id);
+    }
+    return true;
+  });
 
   const handleNavClick = (id) => {
     setCurrentPage(id);
@@ -130,17 +138,54 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
           </nav>
         </div>
 
-        {/* Logout button */}
-        <div className="p-4 border-t border-zinc-900">
+        {/* User Role Badge and Switcher */}
+        <div className="p-4 border-t border-zinc-900 bg-zinc-950/60">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Active Role</span>
+            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase border ${
+              (user?.role || 'admin') === 'admin' 
+                ? 'bg-red-500/15 text-red-400 border-red-500/30' 
+                : (user?.role === 'staff' 
+                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' 
+                    : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30')
+            }`}>
+              {(user?.role || 'admin') === 'admin' ? '👑 Admin' : ((user?.role === 'staff') ? '🛡️ Desk Staff' : '💪 Trainer')}
+            </span>
+          </div>
+
+          {/* Quick Role Switcher for Front Desk */}
+          {onRoleChange && (
+            <div className="grid grid-cols-3 gap-1 mb-3">
+              {[
+                { id: 'admin', label: 'Admin' },
+                { id: 'staff', label: 'Staff' },
+                { id: 'trainer', label: 'Trainer' }
+              ].map(r => (
+                <button
+                  key={r.id}
+                  onClick={() => onRoleChange(r.id)}
+                  className={`py-1 text-[9px] font-bold rounded-lg border transition-all cursor-pointer ${
+                    (user?.role || 'admin') === r.id
+                      ? 'bg-zinc-800 border-red-500 text-white'
+                      : 'bg-zinc-900/50 border-zinc-800/80 text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Logout button */}
           <button
             onClick={() => {
               setMobileOpen(false);
               onLogout();
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 cursor-pointer font-medium"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 cursor-pointer font-medium text-xs"
           >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm">Log Out</span>
+            <LogOut className="w-4 h-4" />
+            <span>Log Out</span>
           </button>
         </div>
       </aside>
