@@ -11,9 +11,7 @@ import {
   Calendar,
   Layers,
   ArrowUpRight,
-  Download,
   FileSpreadsheet,
-  FileText,
   ShieldCheck,
   Percent,
   CheckCircle2,
@@ -25,7 +23,7 @@ import {
   MemberDistributionChart 
 } from '../components/Charts';
 import TimeframeSelector from '../components/TimeframeSelector';
-import { downloadReportPdf, downloadReportCsv } from '../utils/pdfGenerator';
+import { downloadReportCsv } from '../utils/pdfGenerator';
 
 export default function Reports({ members = [], payments = [], userRole = 'admin' }) {
   const [cycleTimeframe, setCycleTimeframe] = useState('1M'); // 1D, 1W, 1M, 3M, 6M, 12M
@@ -149,18 +147,6 @@ export default function Reports({ members = [], payments = [], userRole = 'admin
   }, [members, payments, cycleTimeframe]);
 
   // Download Handlers
-  const handleExportPdf = () => {
-    downloadReportPdf({
-      cycle: cycleTimeframe,
-      revenue: stats.revenue,
-      activeCount: stats.activeMembers,
-      churnRate: stats.churnRate,
-      newJoins: stats.newJoins,
-      netGrowth: stats.netGrowth,
-      date: new Date().toLocaleDateString('en-IN')
-    });
-  };
-
   const handleExportCsv = () => {
     downloadReportCsv({
       cycle: cycleTimeframe,
@@ -186,16 +172,6 @@ export default function Reports({ members = [], payments = [], userRole = 'admin
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Export PDF Button */}
-          <button
-            onClick={handleExportPdf}
-            className="px-3 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-            title="Download Vector PDF Performance Report"
-          >
-            <FileText className="w-3.5 h-3.5 text-red-400" />
-            <span>PDF Export</span>
-          </button>
-
           {/* Export Excel / CSV Button */}
           <button
             onClick={handleExportCsv}
@@ -211,12 +187,12 @@ export default function Reports({ members = [], payments = [], userRole = 'admin
         </div>
       </div>
 
-      {/* RBAC Notice if viewing as Staff */}
+      {/* RBAC Notice if viewing as Trainer */}
       {userRole !== 'admin' && (
         <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-center justify-between text-xs text-zinc-400">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span>Logged in as <strong>{userRole.toUpperCase()}</strong>. Financial reports are sanitized for operational overview.</span>
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>Logged in as <strong>{userRole.toUpperCase()}</strong>. Financial metrics are managed by Administrator.</span>
           </div>
         </div>
       )}

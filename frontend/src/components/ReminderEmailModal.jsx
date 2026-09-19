@@ -90,7 +90,7 @@ Address: Near Temple, Rampur`;
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handlePrintPdf = () => {
+  const handlePrint = () => {
     window.print();
   };
 
@@ -136,7 +136,7 @@ Address: Near Temple, Rampur`;
                 }`}
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>Renewal PDF</span>
+                <span>Renewal Receipt</span>
               </button>
             </div>
 
@@ -257,14 +257,14 @@ Address: Near Temple, Rampur`;
             <div className="space-y-4">
               <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-between text-xs print:hidden">
                 <span className="text-red-300 font-semibold">
-                  Official Renewal Invoice PDF for <strong>{clientName}</strong> ({daysLeft} Days Left)
+                  Official Renewal Invoice for <strong>{clientName}</strong> ({daysLeft} Days Left)
                 </span>
                 <button
-                  onClick={handlePrintPdf}
+                  onClick={handlePrint}
                   className="px-3 py-1.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white font-bold rounded-lg shadow-md transition-all flex items-center gap-1.5 cursor-pointer text-xs"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  <span>Download PDF / Print</span>
+                  <span>Print Receipt</span>
                 </button>
               </div>
 
@@ -374,12 +374,12 @@ Address: Near Temple, Rampur`;
             </button>
 
             <button
-              onClick={handlePrintPdf}
+              onClick={handlePrint}
               className="px-3.5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-300 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer flex-1 sm:flex-initial"
-              title="Download or Print Renewal PDF"
+              title="Print Renewal Receipt"
             >
               <Printer className="w-4 h-4 text-amber-400" />
-              <span>Download PDF</span>
+              <span>Print Receipt</span>
             </button>
           </div>
 

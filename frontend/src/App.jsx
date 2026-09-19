@@ -111,7 +111,8 @@ export default function App() {
     if (savedUser) {
       try {
         const parsed = JSON.parse(savedUser);
-        setUser({ role: 'admin', ...parsed });
+        const role = parsed.role === 'trainer' ? 'trainer' : 'admin';
+        setUser({ ...parsed, role });
       } catch (e) {
         setUser({ email: 'phoenixgym.vkp@gmail.com', name: 'Phoenix Gym Admin', role: 'admin' });
       }

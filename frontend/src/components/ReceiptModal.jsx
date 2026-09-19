@@ -36,7 +36,7 @@ export default function ReceiptModal({ receipt, member, onClose }) {
               className="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Download PDF / Print</span>
+              <span>Print Receipt</span>
             </button>
             <button
               onClick={onClose}

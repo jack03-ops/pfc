@@ -410,7 +410,7 @@ export default function RenewModal({ member, allMembers = [], onClose, onConfirm
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. In-person renewal, verified by desk staff..."
+              placeholder="e.g. In-person renewal, verified at gym desk..."
               className="w-full px-3.5 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500"
             />
           </div>

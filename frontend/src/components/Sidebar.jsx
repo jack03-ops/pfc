@@ -145,21 +145,18 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
             <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase border ${
               (user?.role || 'admin') === 'admin' 
                 ? 'bg-red-500/15 text-red-400 border-red-500/30' 
-                : (user?.role === 'staff' 
-                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' 
-                    : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30')
+                : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
             }`}>
-              {(user?.role || 'admin') === 'admin' ? '👑 Admin' : ((user?.role === 'staff') ? '🛡️ Desk Staff' : '💪 Trainer')}
+              {(user?.role || 'admin') === 'admin' ? '👑 Admin' : '💪 Trainer'}
             </span>
           </div>
 
-          {/* Quick Role Switcher for Front Desk */}
+          {/* Quick Role Switcher */}
           {onRoleChange && (
-            <div className="grid grid-cols-3 gap-1 mb-3">
+            <div className="grid grid-cols-2 gap-1.5 mb-3">
               {[
-                { id: 'admin', label: 'Admin' },
-                { id: 'staff', label: 'Staff' },
-                { id: 'trainer', label: 'Trainer' }
+                { id: 'admin', label: '👑 Admin' },
+                { id: 'trainer', label: '💪 Trainer' }
               ].map(r => (
                 <button
                   key={r.id}

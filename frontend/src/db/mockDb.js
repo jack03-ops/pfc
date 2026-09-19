@@ -680,7 +680,7 @@ export const recordMemberReminder = (memberId, reminderType) => {
       time: time,
       type: 'Email',
       status: 'Sent',
-      message: `[${reminderType}] Notice & PDF Invoice sent to ${targetMember.email || targetMember.fullName}`
+      message: `[${reminderType}] Notice sent to ${targetMember.email || targetMember.fullName}`
     };
     saveReminders([newLog, ...reminders]);
   }
@@ -719,7 +719,7 @@ export const recordMemberWelcomeEmail = (memberId) => {
       time: time,
       type: 'Email',
       status: 'Sent',
-      message: `[Welcome Email] Welcome to Gym notice & PDF Invoice sent to ${targetMember.email || targetMember.fullName}`
+      message: `[Welcome Email] Welcome to Gym notice sent to ${targetMember.email || targetMember.fullName}`
     };
     saveReminders([newLog, ...reminders]);
   }

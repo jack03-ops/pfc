@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
-import { Flame, Lock, Mail, Dumbbell, ShieldCheck } from 'lucide-react';
+import { Flame, Lock, Mail, Dumbbell, ShieldCheck, UserCheck } from 'lucide-react';
 import phoenixLogo from '../assets/phoenix_logo.png';
 
 export default function Login({ onLoginSuccess }) {
+  const [selectedRole, setSelectedRole] = useState('admin'); // 'admin' or 'trainer'
   const [email, setEmail] = useState('phoenixgym.vkp@gmail.com');
   const [password, setPassword] = useState('phoenix fitness centre');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleRoleTabChange = (role) => {
+    setSelectedRole(role);
+    setError('');
+    if (role === 'admin') {
+      setEmail('phoenixgym.vkp@gmail.com');
+      setPassword('phoenix fitness centre');
+    } else {
+      setEmail('trainer@phoenixgym.com');
+      setPassword('trainer fitness centre');
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -14,16 +27,29 @@ export default function Login({ onLoginSuccess }) {
     setLoading(true);
 
     setTimeout(() => {
-      const isOfficialAccount = (email.trim().toLowerCase() === 'phoenixgym.vkp@gmail.com' || email.trim().toLowerCase() === 'phoenixfitnesscentre03@gmail.com') && password === 'phoenix fitness centre';
-      const isDemoAccount = email.trim().toLowerCase() === 'admin@phoenixgym.com' && password === 'admin123';
+      const trimmedEmail = email.trim().toLowerCase();
 
-      if (isOfficialAccount || isDemoAccount) {
-        onLoginSuccess({ email: email.trim(), name: 'Phoenix Gym Manager' });
-      } else {
-        setError('Invalid email or password. Please check your credentials.');
-        setLoading(false);
+      if (selectedRole === 'admin') {
+        const isOfficialAdmin = (trimmedEmail === 'phoenixgym.vkp@gmail.com' || trimmedEmail === 'phoenixfitnesscentre03@gmail.com') && password === 'phoenix fitness centre';
+        const isDemoAdmin = trimmedEmail === 'admin@phoenixgym.com' && password === 'admin123';
+
+        if (isOfficialAdmin || isDemoAdmin) {
+          onLoginSuccess({ email: email.trim(), name: 'Phoenix Gym Admin', role: 'admin' });
+        } else {
+          setError('Invalid Admin credentials. Please check your Administrator email and password.');
+          setLoading(false);
+        }
+      } else if (selectedRole === 'trainer') {
+        const isTrainer = (trimmedEmail === 'trainer@phoenixgym.com' || trimmedEmail === 'trainer03' || trimmedEmail === 'phoenix_trainer') && (password === 'trainer fitness centre' || password === 'trainer123');
+
+        if (isTrainer) {
+          onLoginSuccess({ email: email.trim(), name: 'Phoenix Gym Coach', role: 'trainer' });
+        } else {
+          setError('Invalid Trainer credentials. Please check your Trainer email/username and password.');
+          setLoading(false);
+        }
       }
-    }, 800);
+    }, 600);
   };
 
   return (
@@ -39,14 +65,52 @@ export default function Login({ onLoginSuccess }) {
             <img src={phoenixLogo} alt="Phoenix Logo" className="w-16 h-16 object-contain animate-pulse" />
           </div>
           <h2 className="text-3xl font-extrabold text-white tracking-tight">Phoenix Fitness Gym</h2>
-          <p className="text-zinc-400 text-sm mt-1">Management Portal & Admin Telemetry</p>
+          <p className="text-zinc-400 text-sm mt-1">Management Portal & Telemetry Console</p>
         </div>
 
         {/* Card Panel */}
         <div className="glass-panel p-5 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden border border-zinc-900">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-red-600 via-rose-600 to-cyan-500" />
           
-          <h3 className="text-xl font-bold text-white mb-6">Staff Log In</h3>
+          {/* Dedicated Role Tabs */}
+          <div className="grid grid-cols-2 gap-2 p-1.5 bg-zinc-950 border border-zinc-800 rounded-2xl mb-6">
+            <button
+              type="button"
+              onClick={() => handleRoleTabChange('admin')}
+              className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                selectedRole === 'admin'
+                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md shadow-red-950/40'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50'
+              }`}
+            >
+              <span>👑 Admin Login</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleRoleTabChange('trainer')}
+              className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                selectedRole === 'trainer'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-950/40'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50'
+              }`}
+            >
+              <span>💪 Trainer Login</span>
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-bold text-white">
+              {selectedRole === 'admin' ? 'Administrator Sign In' : 'Trainer Access Sign In'}
+            </h3>
+            <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase border ${
+              selectedRole === 'admin'
+                ? 'bg-red-500/15 text-red-400 border-red-500/30'
+                : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+            }`}>
+              {selectedRole === 'admin' ? 'Full Control' : 'View Directory'}
+            </span>
+          </div>
 
           {error && (
             <div className="mb-4 p-3.5 bg-rose-500/15 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-semibold">
@@ -54,35 +118,35 @@ export default function Login({ onLoginSuccess }) {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                Administrator Email
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+                {selectedRole === 'admin' ? 'Admin Email' : 'Trainer Username / Email'}
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                 <input
-                  type="email"
+                  type={selectedRole === 'admin' ? 'email' : 'text'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-all placeholder:text-zinc-650"
-                  placeholder="phoenixgym.vkp@gmail.com"
+                  className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-xs focus:outline-none focus:border-red-500 transition-all placeholder:text-zinc-650"
+                  placeholder={selectedRole === 'admin' ? 'phoenixgym.vkp@gmail.com' : 'trainer@phoenixgym.com'}
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                Security Password
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+                {selectedRole === 'admin' ? 'Admin Security Password' : 'Trainer Password'}
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-all placeholder:text-zinc-650"
+                  className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-xs focus:outline-none focus:border-red-500 transition-all placeholder:text-zinc-650"
                   placeholder="••••••••"
                   required
                 />
@@ -92,28 +156,42 @@ export default function Login({ onLoginSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3.5 px-4 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white font-semibold rounded-xl text-sm transition-all duration-200 shadow-lg shadow-red-950/40 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className={`w-full mt-2 py-3 px-4 text-white font-semibold rounded-xl text-xs transition-all duration-200 shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
+                selectedRole === 'admin'
+                  ? 'bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 shadow-red-950/40'
+                  : 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 shadow-emerald-950/40'
+              }`}
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <ShieldCheck className="w-5 h-5" />
-                  Access Dashboard
+                  {selectedRole === 'admin' ? <ShieldCheck className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                  <span>{selectedRole === 'admin' ? 'Access Admin Console' : 'Access Trainer Portal'}</span>
                 </>
               )}
             </button>
           </form>
 
           {/* Credentials helper box */}
-          <div className="mt-8 p-3.5 bg-zinc-950 border border-zinc-900 rounded-2xl flex gap-3 items-center">
-            <div className="bg-cyan-500/10 p-2 rounded-xl text-cyan-400 shrink-0">
+          <div className="mt-6 p-3 bg-zinc-950 border border-zinc-900 rounded-2xl flex gap-3 items-center">
+            <div className={`p-2 rounded-xl shrink-0 ${selectedRole === 'admin' ? 'bg-red-500/10 text-red-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
               <Dumbbell className="w-4 h-4" />
             </div>
-            <div className="text-[11px] text-zinc-400">
-              <p className="font-semibold text-zinc-300">Official Admin Credentials Pre-configured</p>
-              <p className="mt-0.5">Email: <code className="text-red-400">phoenixgym.vkp@gmail.com</code></p>
-              <p className="mt-0.5">Password: <code className="text-red-400">phoenix fitness centre</code></p>
+            <div className="text-[10px] text-zinc-400 leading-tight">
+              {selectedRole === 'admin' ? (
+                <>
+                  <p className="font-bold text-zinc-200 uppercase">Administrator Credentials</p>
+                  <p className="mt-1">Email: <code className="text-red-400 font-mono">phoenixgym.vkp@gmail.com</code></p>
+                  <p className="mt-0.5">Password: <code className="text-red-400 font-mono">phoenix fitness centre</code></p>
+                </>
+              ) : (
+                <>
+                  <p className="font-bold text-zinc-200 uppercase">Trainer Credentials</p>
+                  <p className="mt-1">Username: <code className="text-emerald-400 font-mono">trainer@phoenixgym.com</code></p>
+                  <p className="mt-0.5">Password: <code className="text-emerald-400 font-mono">trainer fitness centre</code></p>
+                </>
+              )}
             </div>
           </div>
         </div>

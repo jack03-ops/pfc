@@ -323,7 +323,7 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
                         <button
                           onClick={() => setSelectedReceipt(p)}
                           className="p-2 text-red-500 hover:text-white bg-red-500/10 hover:bg-red-600 rounded-xl transition-all cursor-pointer border border-red-500/20 shadow-sm inline-flex items-center justify-center group"
-                          title="View & Print Official PDF Receipt"
+                          title="View & Print Official Receipt"
                         >
                           <Receipt className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         </button>
@@ -356,7 +356,7 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
         </div>
       </div>
 
-      {/* Official Tax Invoice & PDF Printable Modal */}
+      {/* Official Tax Invoice & Printable Modal */}
       {selectedReceipt && (
         <ReceiptModal 
           receipt={selectedReceipt} 

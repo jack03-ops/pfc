@@ -265,7 +265,7 @@ export default function Notifications({
                     </button>
                   )}
 
-                  {/* Email Reminder prompt with attached PDF */}
+                  {/* Email Reminder prompt */}
                   {alert.type === 'expiration' && alert.member.email && (
                     <button
                       onClick={() => onSendReminderEmail && onSendReminderEmail(alert.member, Math.max(1, alert.daysLeft || 1))}
@@ -276,7 +276,7 @@ export default function Notifications({
                           ? 'bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border-rose-500/40 shadow-sm'
                           : 'bg-amber-500/20 hover:bg-amber-600 text-amber-300 hover:text-white border-amber-500/40 shadow-sm'
                       }`}
-                      title={isReminderSentToday ? `Notice sent today at ${alert.member.lastReminderTime || ''}. Click to resend.` : `Send reminder email & PDF invoice`}
+                      title={isReminderSentToday ? `Notice sent today at ${alert.member.lastReminderTime || ''}. Click to resend.` : `Send reminder email`}
                     >
                       {isReminderSentToday ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Mail className="w-3.5 h-3.5" />}
                       <span>{isReminderSentToday ? '✓ Sent (Resend)' : alert.isExpired ? 'Expired Notice' : alert.daysLeft === 0 ? 'Today Notice' : `${alert.daysLeft}-Day Reminder`}</span>
