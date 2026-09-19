@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X, Sparkles, AlertCircle, Heart, User, Dumbbell, ShieldAlert, CreditCard, Mail } from 'lucide-react';
+import { Save, X, Sparkles, AlertCircle, Heart, User, Dumbbell, ShieldAlert, CreditCard, Mail, MessageSquare } from 'lucide-react';
 import { getSettings } from '../db/mockDb';
 
 export default function MemberForm({ memberToEdit, onSave, onCancel }) {
@@ -217,7 +217,10 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
       amountPaid: formData.amountPaid ? Number(formData.amountPaid) : 1000
     };
 
-    onSave(sanitizedData, { sendWelcomeEmail: !isEditMode && sendWelcomeEmail && !!formData.email?.trim() });
+    onSave(sanitizedData, { 
+      sendWelcomeEmail: !isEditMode && sendWelcomeEmail,
+      sendWelcomeMessage: !isEditMode && sendWelcomeEmail
+    });
   };
 
   return (
@@ -690,7 +693,7 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
               />
             </div>
 
-            {/* Send Welcome Email Toggle (New enrollments only) */}
+            {/* Send Welcome Message Toggle (WhatsApp & Email - New enrollments only) */}
             {!isEditMode && (
               <div className="flex items-center gap-2.5 p-3 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-zinc-800 transition-all">
                 <input
@@ -700,9 +703,15 @@ export default function MemberForm({ memberToEdit, onSave, onCancel }) {
                   onChange={(e) => setSendWelcomeEmail(e.target.checked)}
                   className="w-4 h-4 accent-red-600 rounded cursor-pointer"
                 />
-                <label htmlFor="sendWelcomeEmail" className="text-xs text-zinc-300 font-semibold cursor-pointer select-none flex items-center gap-1.5 flex-1">
-                  <Mail className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                  <span>Send Welcome Message to client upon enrollment</span>
+                <label htmlFor="sendWelcomeEmail" className="text-xs text-zinc-300 font-semibold cursor-pointer select-none flex items-center gap-2 flex-1">
+                  <span className="flex items-center gap-1 text-emerald-400 shrink-0">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                  </span>
+                  <span className="text-zinc-600">/</span>
+                  <span className="flex items-center gap-1 text-rose-400 shrink-0">
+                    <Mail className="w-3.5 h-3.5" />
+                  </span>
+                  <span>Send Welcome Message (WhatsApp & Email) upon enrollment</span>
                 </label>
               </div>
             )}

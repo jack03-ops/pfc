@@ -21,6 +21,7 @@ import {
   initializeDb,
   fetchFromCloud,
   recordMemberReminder,
+  recordMemberWelcome,
   recordMemberWelcomeEmail,
   getClearedNotificationIds,
   saveClearedNotificationIds
@@ -204,8 +205,8 @@ export default function App() {
         savePayments(updatedPayments);
       }
 
-      // Automatically trigger Welcome Email modal if enabled or email exists
-      if (options.sendWelcomeEmail || (newMember.email && newMember.email.trim())) {
+      // Automatically trigger Welcome modal (WhatsApp & Email) if enabled
+      if (options.sendWelcomeEmail || options.sendWelcomeMessage || (newMember.email && newMember.email.trim()) || newMember.phone || newMember.whatsapp) {
         setWelcomeMember(newMember);
       }
     }
@@ -253,10 +254,10 @@ export default function App() {
     showToast(`✅ Web WhatsApp reminder recorded for ${member.fullName}!`, 'success');
   };
 
-  const handleWelcomeEmailSent = (member) => {
-    const updated = recordMemberWelcomeEmail(member.id);
+  const handleWelcomeEmailSent = (member, channel = 'Email') => {
+    const updated = recordMemberWelcome(member.id, channel);
     setMembers(updated);
-    showToast(`✅ Welcome Email recorded for ${member.fullName}!`, 'success');
+    showToast(`✅ Welcome notice sent via ${channel} to ${member.fullName}!`, 'success');
   };
 
   const handleEditMemberTrigger = (member) => {

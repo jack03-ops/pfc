@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Bell, 
   Hourglass, 
@@ -12,6 +12,7 @@ import {
   Trash2,
   CheckCheck,
   RotateCcw,
+  RefreshCw,
   X
 } from 'lucide-react';
 
@@ -111,6 +112,8 @@ export default function Notifications({
     return list.slice(0, 10); // Top relevant notifications
   }, [members]);
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   // Filter out cleared/dismissed alerts
   const visibleAlerts = useMemo(() => {
     return alertsList.filter(a => !clearedIds?.includes(a.id));
@@ -119,6 +122,18 @@ export default function Notifications({
   const clearedCount = useMemo(() => {
     return (clearedIds || []).filter(id => alertsList.some(a => a.id === id)).length;
   }, [alertsList, clearedIds]);
+
+  const handleRefreshAndClear = () => {
+    setIsRefreshing(true);
+    if (visibleAlerts.length > 0 && onClearAllNotifications) {
+      onClearAllNotifications(visibleAlerts.map(a => a.id));
+    } else if (onRestoreNotifications) {
+      onRestoreNotifications();
+    }
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 600);
+  };
 
   const handleWhatsAppAlert = (member, daysLeft) => {
     const rawPhone = member.whatsapp || member.phone || '';
@@ -180,16 +195,16 @@ export default function Notifications({
         </div>
 
         <div className="flex items-center gap-2">
-          {visibleAlerts.length > 0 && onClearAllNotifications && (
-            <button
-              onClick={() => onClearAllNotifications(visibleAlerts.map(a => a.id))}
-              className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-slate-300 hover:text-white border border-zinc-800 hover:border-red-500/40 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-              title="Clear all active notifications"
-            >
-              <CheckCheck className="w-3.5 h-3.5 text-red-500" />
-              <span>Clear Notifications</span>
-            </button>
-          )}
+          {/* Refresh & Clear All Notifications Button */}
+          <button
+            onClick={handleRefreshAndClear}
+            disabled={isRefreshing}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-red-950/40 disabled:opacity-50"
+            title={visibleAlerts.length > 0 ? "Refresh alerts and clear all notifications" : "Refresh & re-scan notification feed"}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'Refreshing...' : visibleAlerts.length > 0 ? 'Refresh & Clear All' : 'Refresh Feed'}</span>
+          </button>
 
           {clearedCount > 0 && onRestoreNotifications && (
             <button
@@ -328,15 +343,25 @@ export default function Notifications({
             <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
             <p className="font-bold text-slate-300">All notifications cleared!</p>
             <p className="text-[11px] text-slate-500">No active system alerts or notifications at this time.</p>
-            {clearedCount > 0 && onRestoreNotifications && (
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
               <button
-                onClick={onRestoreNotifications}
-                className="mt-2 px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-slate-300 hover:text-white border border-zinc-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                onClick={handleRefreshAndClear}
+                disabled={isRefreshing}
+                className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-slate-300 hover:text-white border border-zinc-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Restore {clearedCount} Cleared Notification{clearedCount === 1 ? '' : 's'}</span>
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-red-400' : ''}`} />
+                <span>{isRefreshing ? 'Re-scanning Alerts...' : 'Refresh Feed'}</span>
               </button>
-            )}
+              {clearedCount > 0 && onRestoreNotifications && (
+                <button
+                  onClick={onRestoreNotifications}
+                  className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-slate-300 hover:text-white border border-zinc-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Restore {clearedCount} Cleared</span>
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

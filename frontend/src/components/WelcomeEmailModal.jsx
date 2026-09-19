@@ -1,11 +1,26 @@
 import React, { useState } from 'react';
-import { Mail, CheckCircle2, Copy, X, Send, Sparkles, Printer, FileText, ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
-import { logWelcomeEmail } from '../db/mockDb';
+import { 
+  Mail, 
+  MessageSquare, 
+  CheckCircle2, 
+  Copy, 
+  X, 
+  Send, 
+  Sparkles, 
+  Printer, 
+  FileText, 
+  ShieldCheck, 
+  Loader2, 
+  AlertCircle,
+  Phone
+} from 'lucide-react';
+import { recordMemberWelcome } from '../db/mockDb';
 import phoenixLogo from '../assets/phoenix_logo.png';
 
 export default function WelcomeEmailModal({ member, onClose, onEmailSent }) {
-  const [activeTab, setActiveTab] = useState('email'); // 'email' | 'invoice'
-  const [sent, setSent] = useState(false);
+  const [activeTab, setActiveTab] = useState('whatsapp'); // 'whatsapp' | 'email' | 'invoice'
+  const [emailSent, setEmailSent] = useState(false);
+  const [whatsAppSent, setWhatsAppSent] = useState(false);
   const [copied, setCopied] = useState(false);
   const [sendingServer, setSendingServer] = useState(false);
   const [serverStatus, setServerStatus] = useState(null);
@@ -18,6 +33,7 @@ export default function WelcomeEmailModal({ member, onClose, onEmailSent }) {
   const clientEmail = member.email || 'member@gmail.com';
   const clientName = member.fullName || 'Gym Member';
   const clientId = member.id || 'PXM-1001';
+  const clientPhone = member.whatsapp || member.phone || '+91 8015552425';
   const planName = member.plan || 'Monthly';
   const startDate = member.startDate || new Date().toISOString().split('T')[0];
   const endDate = member.endDate || '2026-10-04';
@@ -25,6 +41,41 @@ export default function WelcomeEmailModal({ member, onClose, onEmailSent }) {
   const amountPaid = member.amountPaid ? Number(member.amountPaid) : 1000;
   const paymentMethod = 'UPI';
 
+  // 1. WhatsApp Template
+  const whatsappWelcomeText = `🏋️ *WELCOME TO PHOENIX FITNESS CENTRE!* 🏋️
+
+Hello *${clientName}*,
+
+Welcome to the Phoenix Fitness family! 💪 We are thrilled to partner with you on your fitness journey.
+
+📋 *YOUR MEMBERSHIP DETAILS:*
+• Member ID: *${clientId}*
+• Plan: *${planName} Plan*
+• Start Date: ${startDate}
+• Expiry Date: ${endDate}
+• Status: *Active & Verified*
+
+💳 *PAYMENT RECEIPT:*
+• Invoice Ref: ${invoiceNo}
+• Total Amount Paid: ₹${amountPaid.toLocaleString('en-IN')}
+• Payment Mode: ${paymentMethod}
+• Status: *PAID & VERIFIED*
+
+⏰ *GYM GUIDELINES & HOURS:*
+• Monday – Saturday: 5:00 AM – 10:00 PM
+• Strength, Cardio, Crossfit & Free Weights
+• Certified Floor Trainers available
+• Please bring clean workout shoes and a towel
+
+📍 *CONTACT & DESK:*
+• Phone: ${contactPhone}
+• Email: ${contactEmail}
+• Address: ${gymName}, Near Temple, Rampur
+
+Let's crush your fitness goals together! Keep pushing your limits! 💪🔥
+*${gymName} Team*`;
+
+  // 2. Email Subject & Body
   const emailSubject = `🏋️ Welcome to ${gymName} & Official Payment Receipt - ${clientName}!`;
 
   const emailBodyText = `Hi ${clientName},
@@ -71,7 +122,29 @@ Keep pushing your limits!
 Best regards,
 ${gymName} Team`;
 
-  // Direct Server Delivery (Fallback to mailto compose)
+  // Handler: Send via WhatsApp
+  const handleSendWhatsApp = () => {
+    const rawPhone = member.whatsapp || member.phone || '';
+    const cleanPhone = String(rawPhone).replace(/\D/g, '').replace(/^91/, '');
+    
+    // Log to mock database as WhatsApp Welcome
+    recordMemberWelcome(member.id, 'WhatsApp');
+
+    const encodedText = encodeURIComponent(whatsappWelcomeText);
+    const isDesktop = !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const whatsappUrl = isDesktop
+      ? `https://web.whatsapp.com/send?phone=91${cleanPhone || '8015552425'}&text=${encodedText}`
+      : `https://api.whatsapp.com/send?phone=91${cleanPhone || '8015552425'}&text=${encodedText}`;
+
+    window.open(whatsappUrl, '_blank');
+    setWhatsAppSent(true);
+
+    if (onEmailSent) {
+      onEmailSent(member, 'WhatsApp');
+    }
+  };
+
+  // Handler: Send Welcome Email
   const handleSendEmail = async () => {
     setSendingServer(true);
     setServerStatus(null);
@@ -84,8 +157,9 @@ ${gymName} Team`;
       const data = await res.json();
       if (data.success) {
         setServerStatus({ ok: true, msg: `Official welcome notice emailed to ${clientEmail}!` });
-        setSent(true);
-        if (onEmailSent) onEmailSent(member);
+        setEmailSent(true);
+        recordMemberWelcome(member.id, 'Email');
+        if (onEmailSent) onEmailSent(member, 'Email');
       } else {
         throw new Error(data.message || 'SMTP offline');
       }
@@ -97,15 +171,17 @@ ${gymName} Team`;
         ok: true,
         msg: `Pre-composed email opened ready to send to ${clientEmail}!`
       });
-      setSent(true);
-      if (onEmailSent) onEmailSent(member);
+      setEmailSent(true);
+      recordMemberWelcome(member.id, 'Email');
+      if (onEmailSent) onEmailSent(member, 'Email');
     } finally {
       setSendingServer(false);
     }
   };
 
   const handleCopyText = () => {
-    navigator.clipboard.writeText(emailBodyText);
+    const textToCopy = activeTab === 'whatsapp' ? whatsappWelcomeText : emailBodyText;
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -122,15 +198,14 @@ ${gymName} Team`;
         <div className="p-4 sm:p-5 bg-gradient-to-r from-red-950/40 via-zinc-900 to-zinc-900 border-b border-zinc-800 flex items-center justify-between print:hidden">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-red-600/20 text-red-400 rounded-xl border border-red-500/30">
-              <Mail className="w-5 h-5" />
+              <Sparkles className="w-5 h-5 text-amber-400" />
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-1.5">
-                <span>Welcome Email &amp; Receipt</span>
-                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>Welcome Member — WhatsApp &amp; Email Dispatch</span>
               </h3>
               <p className="text-[11px] text-zinc-400">
-                Official document for <span className="text-slate-200 font-semibold">{clientName}</span> ({clientEmail})
+                Onboarding message for <span className="text-slate-200 font-semibold">{clientName}</span> ({clientPhone})
               </p>
             </div>
           </div>
@@ -139,22 +214,31 @@ ${gymName} Team`;
             {/* Tab switchers */}
             <div className="bg-zinc-900 p-1 rounded-xl border border-zinc-800 flex text-xs font-semibold">
               <button
+                onClick={() => setActiveTab('whatsapp')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'whatsapp' ? 'bg-emerald-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>WhatsApp</span>
+              </button>
+              <button
                 onClick={() => setActiveTab('email')}
                 className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'email' ? 'bg-red-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 <Mail className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Welcome Email</span>
+                <span>Email</span>
               </button>
               <button
                 onClick={() => setActiveTab('invoice')}
                 className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'invoice' ? 'bg-red-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
+                  activeTab === 'invoice' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>View Receipt</span>
+                <span>Receipt</span>
               </button>
             </div>
 
@@ -169,7 +253,27 @@ ${gymName} Team`;
 
         {/* Content Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
-          {/* Server Dispatch / Fallback status */}
+          {/* Member overview badge */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-zinc-900/60 rounded-2xl border border-zinc-800/80 text-[11px] print:hidden">
+            <div>
+              <span className="text-zinc-500 block uppercase text-[9px] font-bold">Client</span>
+              <span className="text-white font-semibold truncate block">{clientName}</span>
+            </div>
+            <div>
+              <span className="text-zinc-500 block uppercase text-[9px] font-bold">Plan</span>
+              <span className="text-white font-semibold block">{planName}</span>
+            </div>
+            <div>
+              <span className="text-zinc-500 block uppercase text-[9px] font-bold">Amount Paid</span>
+              <span className="text-emerald-400 font-bold block">₹{amountPaid.toLocaleString('en-IN')}</span>
+            </div>
+            <div>
+              <span className="text-zinc-500 block uppercase text-[9px] font-bold">Invoice Ref</span>
+              <span className="text-white font-bold block">{invoiceNo}</span>
+            </div>
+          </div>
+
+          {/* Feedback Status */}
           {serverStatus && (
             <div className={`p-3.5 rounded-2xl flex items-center gap-3 text-xs font-semibold print:hidden animate-in fade-in ${
               serverStatus.ok ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border border-rose-500/30 text-rose-300'
@@ -179,35 +283,50 @@ ${gymName} Team`;
             </div>
           )}
 
-          {/* TAB 1: EMAIL PREVIEW */}
-          {activeTab === 'email' && (
-            <div className="space-y-4">
-              {/* Member overview badge */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-zinc-900/60 rounded-2xl border border-zinc-800/80 text-[11px]">
-                <div>
-                  <span className="text-zinc-500 block uppercase text-[9px] font-bold">Client</span>
-                  <span className="text-white font-semibold truncate block">{clientName}</span>
+          {/* TAB 1: WHATSAPP MESSAGE PREVIEW */}
+          {activeTab === 'whatsapp' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-2xl text-xs">
+                <div className="flex items-center gap-2 text-emerald-300">
+                  <Phone className="w-4 h-4 text-emerald-400" />
+                  <span>Target WhatsApp: <strong>{clientPhone}</strong></span>
                 </div>
-                <div>
-                  <span className="text-zinc-500 block uppercase text-[9px] font-bold">Plan</span>
-                  <span className="text-white font-semibold block">{planName}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block uppercase text-[9px] font-bold">Amount Paid</span>
-                  <span className="text-emerald-400 font-bold block">₹{amountPaid.toLocaleString('en-IN')}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block uppercase text-[9px] font-bold">Invoice Ref</span>
-                  <span className="text-white font-bold block">{invoiceNo}</span>
-                </div>
+                <button
+                  onClick={handleSendWhatsApp}
+                  className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>{whatsAppSent ? '✓ Sent (Resend)' : 'Open Web WhatsApp'}</span>
+                </button>
               </div>
 
-              {/* Email Content Box */}
+              {/* Chat Bubble Card */}
+              <div className="border border-emerald-900/40 rounded-2xl overflow-hidden bg-zinc-950">
+                <div className="px-4 py-2 bg-emerald-950/50 border-b border-emerald-900/40 text-xs flex justify-between items-center text-emerald-300">
+                  <span className="font-semibold flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                    WhatsApp Pre-formatted Message
+                  </span>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">
+                    Official Notice
+                  </span>
+                </div>
+
+                <div className="p-4 text-xs text-zinc-300 leading-relaxed font-mono whitespace-pre-wrap max-h-72 overflow-y-auto bg-zinc-900/40">
+                  {whatsappWelcomeText}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: EMAIL PREVIEW */}
+          {activeTab === 'email' && (
+            <div className="space-y-3">
               <div className="border border-zinc-800 rounded-2xl overflow-hidden bg-zinc-900/40">
                 <div className="px-4 py-2.5 bg-zinc-900 border-b border-zinc-800 text-xs flex justify-between items-center text-zinc-400">
                   <span className="truncate pr-2"><strong>Subject:</strong> {emailSubject}</span>
                   <span className="text-[10px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full font-bold shrink-0">
-                    From: {contactEmail}
+                    To: {clientEmail}
                   </span>
                 </div>
                 
@@ -255,7 +374,7 @@ ${gymName} Team`;
             </div>
           )}
 
-          {/* TAB 2: PRINTABLE INVOICE VIEW */}
+          {/* TAB 3: PRINTABLE INVOICE VIEW */}
           {activeTab === 'invoice' && (
             <div className="space-y-4">
               <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-between text-xs print:hidden">
@@ -368,7 +487,7 @@ ${gymName} Team`;
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={handleCopyText}
-              className="px-3.5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-300 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer flex-1 sm:flex-initial"
+              className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-slate-300 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer flex-1 sm:flex-initial"
             >
               {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               <span>{copied ? 'Copied!' : 'Copy Text'}</span>
@@ -378,17 +497,29 @@ ${gymName} Team`;
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={onClose}
-              className="w-1/2 sm:w-auto px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-slate-400 hover:text-white text-xs font-semibold rounded-xl transition-all cursor-pointer"
+              className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-slate-400 hover:text-white text-xs font-semibold rounded-xl transition-all cursor-pointer"
             >
               Close
             </button>
+
+            {/* 1-Click WhatsApp Button */}
+            <button
+              onClick={handleSendWhatsApp}
+              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              title="Open WhatsApp Web to send welcome greeting"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>{whatsAppSent ? 'WhatsApp Sent' : 'Send WhatsApp'}</span>
+            </button>
+
+            {/* 1-Click Email Button */}
             <button
               onClick={handleSendEmail}
               disabled={sendingServer}
-              className="w-1/2 sm:w-auto px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              {sendingServer ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              <span>{sendingServer ? 'Sending...' : sent ? 'Send Again' : 'Send Welcome Email'}</span>
+              {sendingServer ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+              <span>{sendingServer ? 'Sending...' : emailSent ? 'Email Sent' : 'Send Email'}</span>
             </button>
           </div>
         </div>

@@ -688,18 +688,22 @@ export const recordMemberReminder = (memberId, reminderType) => {
   return updatedMembers;
 };
 
-// Record welcome email on member record
-export const recordMemberWelcomeEmail = (memberId) => {
+// Record welcome message (WhatsApp / Email) on member record
+export const recordMemberWelcome = (memberId, channel = 'Email') => {
   const today = new Date().toISOString().split('T')[0];
   const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   const members = getMembers();
   let targetMember = null;
+  const isWhatsApp = channel.toLowerCase().includes('whatsapp');
+
   const updatedMembers = members.map(m => {
     if (m.id === memberId) {
       targetMember = {
         ...m,
-        welcomeEmailSentDate: today,
-        welcomeEmailSentTime: time
+        welcomeSentDate: today,
+        welcomeSentTime: time,
+        welcomeSentChannel: channel,
+        ...(isWhatsApp ? { welcomeWhatsAppSentDate: today, welcomeWhatsAppSentTime: time } : { welcomeEmailSentDate: today, welcomeEmailSentTime: time })
       };
       return targetMember;
     }
@@ -717,15 +721,20 @@ export const recordMemberWelcomeEmail = (memberId) => {
       email: targetMember.email || '',
       date: today,
       time: time,
-      type: 'Email',
+      type: isWhatsApp ? 'WhatsApp' : 'Email',
       status: 'Sent',
-      message: `[Welcome Email] Welcome to Gym notice sent to ${targetMember.email || targetMember.fullName}`
+      message: isWhatsApp 
+        ? `[Welcome WhatsApp] Onboarding notice sent to ${targetMember.phone || targetMember.fullName}`
+        : `[Welcome Email] Welcome to Gym notice sent to ${targetMember.email || targetMember.fullName}`
     };
     saveReminders([newLog, ...reminders]);
   }
 
   return updatedMembers;
 };
+
+export const recordMemberWelcomeEmail = (memberId) => recordMemberWelcome(memberId, 'Email');
+export const recordMemberWelcomeWhatsApp = (memberId) => recordMemberWelcome(memberId, 'WhatsApp');
 
 // Seed utility to fully initialize all stores on application mount and sync database version
 export const initializeDb = () => {

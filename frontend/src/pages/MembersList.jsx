@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   Calendar,
   Mail,
+  MessageSquare,
   Briefcase,
   RotateCcw
 } from 'lucide-react';
@@ -408,14 +409,14 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                             </button>
                           )}
                           
-                          {/* Send Welcome Email button */}
-                          {member.email && (
+                          {/* Send Welcome (WhatsApp & Email) button */}
+                          {(member.email || member.phone || member.whatsapp) && (
                             <button
                               onClick={() => onSendWelcomeEmail && onSendWelcomeEmail(member)}
-                              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-zinc-900 rounded-lg transition-all cursor-pointer"
-                              title="Send Welcome Email"
+                              className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-zinc-900 rounded-lg transition-all cursor-pointer"
+                              title="Send Welcome Notice (WhatsApp / Email)"
                             >
-                              <Mail className="w-4 h-4" />
+                              <MessageSquare className="w-4 h-4" />
                             </button>
                           )}
 
@@ -543,16 +544,17 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
             {/* Modal Actions */}
             <div className="flex flex-wrap justify-between items-center gap-2 border-t border-zinc-900 pt-4">
               <div className="flex items-center gap-2">
-                {viewingMember.email && (
+                {(viewingMember.email || viewingMember.phone || viewingMember.whatsapp) && (
                   <button
                     onClick={() => {
                       const m = viewingMember;
                       setViewingMember(null);
                       if (onSendWelcomeEmail) onSendWelcomeEmail(m);
                     }}
-                    className="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-red-950/30"
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-rose-600 hover:from-emerald-500 hover:to-rose-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
                   >
-                    <Mail className="w-4 h-4" /> Send Welcome Email
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Send Welcome (WhatsApp / Email)</span>
                   </button>
                 )}
                 <button
