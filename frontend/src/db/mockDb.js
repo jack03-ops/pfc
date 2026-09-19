@@ -129,9 +129,9 @@ const DEFAULT_MEMBERS = [
     plan: "Monthly",
     startDate: "2026-08-06",
     endDate: "2026-09-05",
-    paymentStatus: "Paid",
+    paymentStatus: "Pending",
     status: "Active",
-    notes: "1 day remaining on monthly subscription (Expires tomorrow)."
+    notes: "Monthly fee payment pending (Expires tomorrow)."
   },
   {
     id: "PXM-1005",
@@ -219,9 +219,9 @@ const DEFAULT_MEMBERS = [
     plan: "Monthly",
     startDate: "2026-08-13",
     endDate: "2026-09-12",
-    paymentStatus: "Paid",
+    paymentStatus: "Pending",
     status: "Active",
-    notes: "Active regular athlete (8 days left)."
+    notes: "Regular athlete - membership fee payment pending."
   },
   {
     id: "PXM-1008",
@@ -330,10 +330,8 @@ const DEFAULT_PAYMENTS = [
   { id: "TXN-101", clientId: "PXM-1001", clientName: "Hari Ram Kumar", amount: 1000, date: "2026-08-08", plan: "Monthly", method: "UPI" },
   { id: "TXN-102", clientId: "PXM-1002", clientName: "Aravind Swamy", amount: 1000, date: "2026-08-06", plan: "Monthly", method: "UPI" },
   { id: "TXN-103", clientId: "PXM-1003", clientName: "Vijay Sethupathi", amount: 2700, date: "2026-06-08", plan: "Quarterly", method: "UPI" },
-  { id: "TXN-104", clientId: "PXM-1004", clientName: "Sivakarthikeyan", amount: 1000, date: "2026-08-06", plan: "Monthly", method: "UPI" },
   { id: "TXN-105", clientId: "PXM-1005", clientName: "Karthik Raja", amount: 1000, date: "2026-08-08", plan: "Monthly", method: "UPI" },
   { id: "TXN-106", clientId: "PXM-1006", clientName: "Priya Dharshini", amount: 5000, date: "2026-03-06", plan: "Half-Yearly", method: "UPI" },
-  { id: "TXN-107", clientId: "PXM-1007", clientName: "Suresh Raina", amount: 1000, date: "2026-08-13", plan: "Monthly", method: "UPI" },
   { id: "TXN-108", clientId: "PXM-1008", clientName: "Ananya Ram", amount: 9000, date: "2025-09-20", plan: "Yearly", method: "UPI" },
   { id: "TXN-109", clientId: "PXM-1009", clientName: "Dinesh Kumar", amount: 1000, date: "2026-09-04", plan: "Monthly", method: "UPI" },
   { id: "TXN-110", clientId: "PXM-1010", clientName: "Surya Prakash", amount: 2700, date: "2026-08-05", plan: "Quarterly", method: "UPI" }
@@ -611,8 +609,10 @@ export const getPayments = () => {
 };
 
 export const savePayments = (payments) => {
+  localStorage.setItem('phoenix_gym_last_edit_time', String(Date.now()));
   localStorage.setItem(PAYMENTS_KEY, JSON.stringify(payments));
-  syncToCloud(getMembers(), payments);
+  setIdbData(PAYMENTS_KEY, payments);
+  syncToCloud(getMembers(true), payments);
 };
 
 export const getReminders = () => {
@@ -730,14 +730,16 @@ export const recordMemberWelcomeEmail = (memberId) => {
 // Seed utility to fully initialize all stores on application mount and sync database version
 export const initializeDb = () => {
   const currentVersion = localStorage.getItem('phoenix_gym_db_ver');
-  if (currentVersion !== 'v5_persistence_indexeddb') {
-    const existing = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!existing) {
+  if (currentVersion !== 'v6_production_payments') {
+    const existingMembers = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!existingMembers) {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERS));
       localStorage.setItem(PAYMENTS_KEY, JSON.stringify(DEFAULT_PAYMENTS));
       localStorage.setItem(REMINDERS_KEY, JSON.stringify(DEFAULT_REMINDERS));
+      setIdbData(LOCAL_STORAGE_KEY, DEFAULT_MEMBERS);
+      setIdbData(PAYMENTS_KEY, DEFAULT_PAYMENTS);
     }
-    localStorage.setItem('phoenix_gym_db_ver', 'v5_persistence_indexeddb');
+    localStorage.setItem('phoenix_gym_db_ver', 'v6_production_payments');
   }
   getMembers();
   getSettings();

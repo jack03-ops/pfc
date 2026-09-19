@@ -158,9 +158,9 @@ export default function App() {
     localStorage.setItem('phoenix_gym_session', JSON.stringify(userWithRole));
   };
 
-  const handleRoleChange = (newRole) => {
+  const handleRoleChange = (newRole, newUserData) => {
     if (!user) return;
-    const updated = { ...user, role: newRole };
+    const updated = { ...user, role: newRole, ...(newUserData || {}) };
     setUser(updated);
     localStorage.setItem('phoenix_gym_session', JSON.stringify(updated));
     showToast(`Role switched to ${newRole.toUpperCase()}`, 'info');
@@ -267,24 +267,55 @@ export default function App() {
   // Record Manual Payments
   const handleAddPayment = (paymentData) => {
     const txnId = `TXN-${101 + payments.length}`;
+    const todayStr = paymentData.date || new Date().toISOString().split('T')[0];
     const newTxn = {
       id: txnId,
       ...paymentData,
-      date: new Date().toISOString().split('T')[0]
+      date: todayStr
     };
-    const updatedPayments = [...payments, newTxn];
+    const updatedPayments = [newTxn, ...payments];
     setPayments(updatedPayments);
     savePayments(updatedPayments);
 
-    // Update member payment status as Paid
+    // Update member payment status as Paid and extend if expired
     const updatedMembers = members.map(m => {
       if (m.id === paymentData.clientId) {
-        return { ...m, paymentStatus: 'Paid' };
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const parts = (m.endDate || '').split('-');
+        let isPastExpiry = false;
+        if (parts.length === 3) {
+          const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+          isPastExpiry = end.getTime() < todayStart.getTime();
+        }
+
+        let newEnd = m.endDate;
+        let newStart = m.startDate;
+        if (isPastExpiry || m.status === 'Expired') {
+          let durationMonths = 1;
+          const planName = paymentData.plan || m.plan;
+          if (planName === 'Quarterly') durationMonths = 3;
+          else if (planName === 'Half-Yearly') durationMonths = 6;
+          else if (planName === 'Yearly') durationMonths = 12;
+          const future = new Date(now.getFullYear(), now.getMonth() + durationMonths, now.getDate());
+          newStart = todayStr;
+          newEnd = `${future.getFullYear()}-${String(future.getMonth() + 1).padStart(2, '0')}-${String(future.getDate()).padStart(2, '0')}`;
+        }
+
+        return {
+          ...m,
+          paymentStatus: 'Paid',
+          status: 'Active',
+          startDate: newStart,
+          endDate: newEnd,
+          lastRenewalDate: todayStr
+        };
       }
       return m;
     });
     setMembers(updatedMembers);
     saveMembers(updatedMembers);
+    showToast(`Receipt ${txnId} (₹${paymentData.amount}) recorded for ${paymentData.clientName || 'member'}!`, 'success');
   };
 
   // Quick mark outstanding balances as Paid
@@ -296,8 +327,9 @@ export default function App() {
       clientId,
       clientName: memberObj.fullName,
       amount,
-      plan,
-      method: 'UPI'
+      plan: plan || memberObj.plan,
+      method: 'UPI',
+      notes: 'Fee received via Pending Dues collection'
     });
   };
 
