@@ -67,7 +67,7 @@ def generate_diagram_1():
     draw.text((80, 168), "1. NEW MEMBER ENROLLMENT", fill="#60A5FA", font=f_box_h)
     lines1 = [
         "• Admin enters Name, Mobile, Village, Plan",
-        "• Unique ID Auto-Assigned (PXM-1001...)",
+        "• Unique ID Auto-Assigned (PFM-1001...)",
         "• Status: ACTIVE  |  Payment: PAID",
         "• Vector PDF Receipt generated on-the-fly",
         "• Instant Welcome Email notification triggered"
@@ -581,7 +581,7 @@ def generate_pdf():
     story.append(Paragraph("2. Primary Website Functionality & Core Modules", h1_style))
     story.append(Paragraph("<b>1. Dashboard Telemetry Console:</b> Displays real-time metrics including Active Members, Expiring Soon, Payments Pending, and Today's Renewals. Features quick actions, live reminder dispatch monitor, and member growth analytics.", bullet_style))
     story.append(Paragraph("<b>2. Gym Members Directory:</b> High-density member database with full-text search (ID, name, phone, village) and categorized filtering (Active, Expired, Expiring in 15 days, Today's Renewals, Pending).", bullet_style))
-    story.append(Paragraph("<b>3. Member Enrollment & Auto-ID:</b> Form with strict 10-digit phone validation, automated unique ID assignment (`PXM-XXXX`), BMI calculation, and instant printable vector receipt generation.", bullet_style))
+    story.append(Paragraph("<b>3. Member Enrollment & Auto-ID:</b> Form with strict 10-digit phone validation, automated unique ID assignment (`PFM-XXXX`), BMI calculation, and instant printable vector receipt generation.", bullet_style))
     story.append(Paragraph("<b>4. Real-time Revenue & Churn Reports:</b> Daily, Weekly, and Monthly financial aggregation from live transactions, calculating Net Growth, Churn Rate %, Retention Rate %, and Unit ARPU with 1-click export to PDF and Excel/CSV.", bullet_style))
     story.append(Paragraph("<b>5. Dynamic UPI QR & Payment Reconciliation:</b> Generates unique UPI intent strings and dynamic QR codes pre-filled with exact fee amount and unique transaction ID (`tr=TXN_...`), with required UTR reference verification.", bullet_style))
     story.append(Paragraph("<b>6. IndexedDB & Database-Grade Soft Deletes:</b> Replaces fragile browser cache limits with asynchronous IndexedDB persistence and `isDeleted: true` soft-deletion pattern, preventing deleted members from resurrecting.", bullet_style))

@@ -454,7 +454,7 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-zinc-900 pb-4">
               <div>
-                <span className="text-[10px] font-extrabold text-red-500 uppercase tracking-widest">PHOENIX FITNESS CENTRE ENROLLMENT RECORD</span>
+                <span className="text-[10px] font-extrabold text-red-500 uppercase tracking-widest">PHOENIX FITNESS ACADEMY ENROLLMENT RECORD</span>
                 <h3 className="text-xl font-black text-white tracking-tight flex items-center gap-2 mt-0.5">
                   {viewingMember.fullName}
                   <span className="text-xs font-normal text-slate-400">({viewingMember.id})</span>

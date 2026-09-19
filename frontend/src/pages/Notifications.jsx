@@ -23,6 +23,7 @@ export default function Notifications({
   onClearNotification,
   onClearAllNotifications,
   onRestoreNotifications,
+  onRefreshFeed,
   onMarkAsPaid, 
   onSendReminderEmail, 
   onSendWhatsAppReminder, 
@@ -123,16 +124,22 @@ export default function Notifications({
     return (clearedIds || []).filter(id => alertsList.some(a => a.id === id)).length;
   }, [alertsList, clearedIds]);
 
-  const handleRefreshAndClear = () => {
+  // Separate Refresh handler (does NOT clear alerts)
+  const handleRefresh = () => {
     setIsRefreshing(true);
-    if (visibleAlerts.length > 0 && onClearAllNotifications) {
-      onClearAllNotifications(visibleAlerts.map(a => a.id));
-    } else if (onRestoreNotifications) {
-      onRestoreNotifications();
+    if (onRefreshFeed) {
+      onRefreshFeed();
     }
     setTimeout(() => {
       setIsRefreshing(false);
-    }, 600);
+    }, 500);
+  };
+
+  // Separate Clear All handler (clears all visible alerts)
+  const handleClearAll = () => {
+    if (visibleAlerts.length > 0 && onClearAllNotifications) {
+      onClearAllNotifications(visibleAlerts.map(a => a.id));
+    }
   };
 
   const handleWhatsAppAlert = (member, daysLeft) => {
@@ -152,17 +159,17 @@ export default function Notifications({
     const renewalAmount = member.amountPaid ? Number(member.amountPaid) : 1000;
 
     if (isExpired) {
-      text = `🚨 *MEMBERSHIP EXPIRED NOTICE - PHOENIX FITNESS CENTRE* 🚨\n\nHello *${member.fullName}*,\n\nYour *${member.plan}* gym membership with *Phoenix Fitness Centre* has expired on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Status: Expired (${member.endDate})\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 8015552425) to reactivate your gym access immediately.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 8015552425`;
+      text = `🚨 *MEMBERSHIP EXPIRED NOTICE - PHOENIX FITNESS ACADEMY* 🚨\n\nHello *${member.fullName}*,\n\nYour *${member.plan}* gym membership with *Phoenix Fitness Academy* has expired on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Status: Expired (${member.endDate})\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 8015552425) to reactivate your gym access immediately.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Academy*\n📞 +91 8015552425`;
     } else if (isToday) {
-      text = `⚠️ *URGENT MEMBERSHIP EXPIRES TODAY - PHOENIX FITNESS CENTRE* ⚠️\n\nHello *${member.fullName}*,\n\nThis is an urgent reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires *TODAY (${member.endDate})*!\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (Expires Today)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 8015552425) to keep your gym access uninterrupted.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 8015552425`;
+      text = `⚠️ *URGENT MEMBERSHIP EXPIRES TODAY - PHOENIX FITNESS ACADEMY* ⚠️\n\nHello *${member.fullName}*,\n\nThis is an urgent reminder from *Phoenix Fitness Academy* that your *${member.plan}* gym membership expires *TODAY (${member.endDate})*!\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (Expires Today)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 8015552425) to keep your gym access uninterrupted.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Academy*\n📞 +91 8015552425`;
     } else if (isUrgent) {
-      text = `🚨 *URGENT MEMBERSHIP EXPIRY NOTICE - PHOENIX FITNESS CENTRE* 🚨\n\nHello *${member.fullName}*,\n\nThis is an urgent reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires *TOMORROW (${member.endDate})*!\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (Expires Tomorrow - 1 Day Left!)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 8015552425) to keep your gym access uninterrupted.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 8015552425`;
+      text = `🚨 *URGENT MEMBERSHIP EXPIRY NOTICE - PHOENIX FITNESS ACADEMY* 🚨\n\nHello *${member.fullName}*,\n\nThis is an urgent reminder from *Phoenix Fitness Academy* that your *${member.plan}* gym membership expires *TOMORROW (${member.endDate})*!\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (Expires Tomorrow - 1 Day Left!)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nPlease send your payment screenshot to this WhatsApp (+91 8015552425) to keep your gym access uninterrupted.\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Academy*\n📞 +91 8015552425`;
     } else if (isTwoDay) {
-      text = `⏳ *MEMBERSHIP EXPIRY NOTICE - PHOENIX FITNESS CENTRE* ⏳\n\nHello *${member.fullName}*,\n\nFriendly reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires in *2 days* on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (2 Days Left)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nSend payment confirmation to this WhatsApp number (+91 8015552425). We look forward to continuing your fitness journey!\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 8015552425`;
+      text = `⏳ *MEMBERSHIP EXPIRY NOTICE - PHOENIX FITNESS ACADEMY* ⏳\n\nHello *${member.fullName}*,\n\nFriendly reminder from *Phoenix Fitness Academy* that your *${member.plan}* gym membership expires in *2 days* on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (2 Days Left)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nSend payment confirmation to this WhatsApp number (+91 8015552425). We look forward to continuing your fitness journey!\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Academy*\n📞 +91 8015552425`;
     } else if (isThreeDay) {
-      text = `🏋️ *MEMBERSHIP RENEWAL REMINDER - PHOENIX FITNESS CENTRE* 🏋️\n\nHello *${member.fullName}*,\n\nFriendly reminder from *Phoenix Fitness Centre* that your *${member.plan}* gym membership expires in *3 days* on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (3 Days Left)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nSend payment confirmation to this WhatsApp number (+91 8015552425). We look forward to continuing your fitness journey!\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Centre*\n📞 +91 8015552425`;
+      text = `🏋️ *MEMBERSHIP RENEWAL REMINDER - PHOENIX FITNESS ACADEMY* 🏋️\n\nHello *${member.fullName}*,\n\nFriendly reminder from *Phoenix Fitness Academy* that your *${member.plan}* gym membership expires in *3 days* on *${member.endDate}*.\n\n📋 *Membership Summary:*\n• Member ID: ${member.id}\n• Plan: ${member.plan}\n• Expiry Date: ${member.endDate} (3 Days Left)\n• Renewal Fee Due: ₹${renewalAmount.toLocaleString('en-IN')}\n\n💳 *Quick UPI Renewal:*\nPay via GooglePay / PhonePe / Paytm to *+91 8015552425* (UPI ID: phoenixgym.vkp@oksbi).\n\nSend payment confirmation to this WhatsApp number (+91 8015552425). We look forward to continuing your fitness journey!\n\nKeep pushing your limits! 💪\n*Phoenix Fitness Academy*\n📞 +91 8015552425`;
     } else {
-      text = `Hello *${member.fullName}*, this is a friendly reminder from *Phoenix Fitness Centre* regarding your *${member.plan}* membership ending on *${member.endDate}*. Please renew on time to avoid interruption!\n\nUPI: phoenixgym.vkp@oksbi (+91 8015552425)\n\nThank you,\n*Phoenix Fitness Centre*`;
+      text = `Hello *${member.fullName}*, this is a friendly reminder from *Phoenix Fitness Academy* regarding your *${member.plan}* membership ending on *${member.endDate}*. Please renew on time to avoid interruption!\n\nUPI: phoenixgym.vkp@oksbi (+91 8015552425)\n\nThank you,\n*Phoenix Fitness Academy*`;
     }
 
     const encodedText = encodeURIComponent(text);
@@ -181,7 +188,7 @@ export default function Notifications({
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-60px)] md:max-h-[calc(100vh-80px)]">
-      {/* Top Header with Clear All & Restore controls */}
+      {/* Top Header with Separate Refresh, Clear All & Restore controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-4xl pb-2 border-b border-zinc-900">
         <div>
           <h2 className="text-base font-black uppercase text-white tracking-wide flex items-center gap-2">
@@ -194,18 +201,31 @@ export default function Notifications({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Refresh & Clear All Notifications Button */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Separate Refresh Button */}
           <button
-            onClick={handleRefreshAndClear}
+            onClick={handleRefresh}
             disabled={isRefreshing}
-            className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-red-950/40 disabled:opacity-50"
-            title={visibleAlerts.length > 0 ? "Refresh alerts and clear all notifications" : "Refresh & re-scan notification feed"}
+            className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-slate-200 hover:text-white border border-zinc-800 hover:border-zinc-700 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+            title="Refresh and re-scan notifications feed"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>{isRefreshing ? 'Refreshing...' : visibleAlerts.length > 0 ? 'Refresh & Clear All' : 'Refresh Feed'}</span>
+            <RefreshCw className={`w-3.5 h-3.5 text-red-500 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
 
+          {/* Separate Clear All Button */}
+          {visibleAlerts.length > 0 && onClearAllNotifications && (
+            <button
+              onClick={handleClearAll}
+              className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-red-950/40"
+              title="Clear all active notifications"
+            >
+              <CheckCheck className="w-3.5 h-3.5" />
+              <span>Clear All</span>
+            </button>
+          )}
+
+          {/* Restore Cleared Button */}
           {clearedCount > 0 && onRestoreNotifications && (
             <button
               onClick={onRestoreNotifications}
@@ -345,7 +365,7 @@ export default function Notifications({
             <p className="text-[11px] text-slate-500">No active system alerts or notifications at this time.</p>
             <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
               <button
-                onClick={handleRefreshAndClear}
+                onClick={handleRefresh}
                 disabled={isRefreshing}
                 className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-slate-300 hover:text-white border border-zinc-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
               >

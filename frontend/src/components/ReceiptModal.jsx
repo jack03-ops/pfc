@@ -11,7 +11,7 @@ export default function ReceiptModal({ receipt, member, onClose }) {
 
   const invoiceNo = `PFC-INV-${receipt.id.replace(/\D/g, '') || '101'}`;
   const clientName = receipt.clientName || member?.fullName || 'Gym Member';
-  const clientId = receipt.clientId || member?.id || 'PXM-1001';
+  const clientId = receipt.clientId || member?.id || 'PFM-1001';
   const village = member?.village || 'Rampur';
   const phone = member?.phone || '+91 8015552425';
   const plan = receipt.plan || 'Monthly';
@@ -76,7 +76,7 @@ export default function ReceiptModal({ receipt, member, onClose }) {
             <div className="flex items-center gap-3">
               <img src={phoenixLogo} alt="Phoenix Logo" className="w-14 h-14 object-contain" />
               <div>
-                <h1 className="text-xl font-black text-white print:text-black tracking-tight uppercase">PHOENIX FITNESS CENTRE</h1>
+                <h1 className="text-xl font-black text-white print:text-black tracking-tight uppercase">PHOENIX FITNESS ACADEMY</h1>
                 <p className="text-[11px] text-zinc-400 print:text-gray-600 font-semibold mt-0.5">Modern Gym & Personal Fitness Academy</p>
                 <p className="text-[10px] text-zinc-500 print:text-gray-500">Contact: +91 8015552425 | phoenixgym.vkp@gmail.com</p>
               </div>
@@ -145,7 +145,7 @@ export default function ReceiptModal({ receipt, member, onClose }) {
           {/* Footer & Signature Stamp */}
           <div className="pt-6 border-t border-zinc-900 print:border-gray-200 flex justify-between items-end">
             <div>
-              <p className="text-[10px] text-zinc-500 print:text-gray-500 font-semibold">Thank you for training with Phoenix Fitness Centre!</p>
+              <p className="text-[10px] text-zinc-500 print:text-gray-500 font-semibold">Thank you for training with Phoenix Fitness Academy!</p>
               <p className="text-[9px] text-zinc-600 print:text-gray-400 mt-0.5">Computer-generated official receipt. No signature required.</p>
             </div>
             <div className="text-center">

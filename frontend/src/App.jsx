@@ -101,6 +101,13 @@ export default function App() {
     showToast('Notifications restored');
   };
 
+  const handleRefreshNotifications = () => {
+    fetchFromCloud();
+    setMembers(getMembers());
+    setPayments(getPayments());
+    showToast('Notifications feed refreshed & synced!', 'info');
+  };
+
   // Initialize DB, load state, and sync with centralized cloud database
   useEffect(() => {
     initializeDb();
@@ -184,7 +191,7 @@ export default function App() {
         const n = parseInt(String(m.id || '').replace(/\D/g, ''), 10);
         return !isNaN(n) && n > max ? n : max;
       }, 1000);
-      const newId = `PXM-${maxNum + 1}`;
+      const newId = `PFM-${maxNum + 1}`;
       const newMember = { ...formData, id: newId };
       updatedMembers = [newMember, ...members];
       
@@ -455,6 +462,7 @@ export default function App() {
             onClearNotification={handleClearNotification}
             onClearAllNotifications={handleClearAllNotifications}
             onRestoreNotifications={handleRestoreNotifications}
+            onRefreshFeed={handleRefreshNotifications}
             onMarkAsPaid={handleMarkAsPaid} 
             onSendReminderEmail={(m, daysLeft) => setReminderMemberData({ member: m, daysLeft })}
             onSendWhatsAppReminder={handleWhatsAppReminderSent}

@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * PHOENIX FITNESS CENTRE - AUTOMATED EMAIL REMINDER SYSTEM
+ * PHOENIX FITNESS ACADEMY - AUTOMATED EMAIL REMINDER SYSTEM
  * ==============================================================================
  * Stack: Google Sheets + Google Apps Script + Gmail API
  * Timezone: Asia/Kolkata (IST)
@@ -10,7 +10,7 @@
 // CONFIGURATION (EMAIL REMINDERS EXCLUSIVE)
 // ==============================================================================
 const CONFIG = {
-  GYM_NAME: 'Phoenix Fitness Centre',
+  GYM_NAME: 'Phoenix Fitness Academy',
   ADMIN_EMAIL: 'phoenixgym.vkp@gmail.com',
   TEST_MODE: false,                           // Set to FALSE for direct Gmail delivery to clients
   ENABLE_EMAIL: true,                         // Enable Automated Email Reminders
@@ -250,12 +250,12 @@ function generateEmailTemplate(reminderType, name, expiryDate) {
 
 function generateWelcomeEmailTemplate(name, memberId, plan, expiryDate) {
   const formattedExpiry = formatDate(expiryDate);
-  const subject = '🏋️ Welcome to Phoenix Fitness Centre - ' + name + '!';
+  const subject = '🏋️ Welcome to Phoenix Fitness Academy - ' + name + '!';
   const content = `
     <p>Hi <strong>${name}</strong>,</p>
     <p>Welcome to <strong>${CONFIG.GYM_NAME}</strong>! 💪 We are thrilled to welcome you to our fitness family.</p>
     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
-      <p style="margin: 0 0 6px 0;"><strong>Member ID:</strong> ${memberId || 'PXM-1001'}</p>
+      <p style="margin: 0 0 6px 0;"><strong>Member ID:</strong> ${memberId || 'PFM-1001'}</p>
       <p style="margin: 0 0 6px 0;"><strong>Plan:</strong> ${plan || 'Monthly'}</p>
       <p style="margin: 0 0 6px 0;"><strong>Expiry Date:</strong> ${formattedExpiry}</p>
       <p style="margin: 0;"><strong>Timings:</strong> Mon – Sat: 5:00 AM – 10:00 PM</p>
@@ -294,7 +294,7 @@ function sendWelcomeEmailWithPdf(toEmail, name, memberId, plan, expiryDate) {
                            .getAs('application/pdf')
                            .setName('Phoenix_Invoice_' + (memberId || '1001') + '.pdf');
   
-  GmailApp.sendEmail(toEmail, mailObj.subject, 'Please find attached your official Phoenix Fitness Centre membership receipt & tax invoice.', {
+  GmailApp.sendEmail(toEmail, mailObj.subject, 'Please find attached your official Phoenix Fitness Academy membership receipt & tax invoice.', {
     htmlBody: mailObj.htmlBody,
     attachments: [pdfBlob]
   });

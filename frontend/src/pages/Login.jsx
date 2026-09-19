@@ -5,7 +5,7 @@ import phoenixLogo from '../assets/phoenix_logo.png';
 export default function Login({ onLoginSuccess }) {
   const [selectedRole, setSelectedRole] = useState('admin'); // 'admin' or 'trainer'
   const [email, setEmail] = useState('phoenixgym.vkp@gmail.com');
-  const [password, setPassword] = useState('phoenix fitness centre');
+  const [password, setPassword] = useState('phoenix fitness academy');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -14,10 +14,10 @@ export default function Login({ onLoginSuccess }) {
     setError('');
     if (role === 'admin') {
       setEmail('phoenixgym.vkp@gmail.com');
-      setPassword('phoenix fitness centre');
+      setPassword('phoenix fitness academy');
     } else {
       setEmail('trainer@phoenixgym.com');
-      setPassword('trainer fitness centre');
+      setPassword('trainer fitness academy');
     }
   };
 
@@ -30,8 +30,8 @@ export default function Login({ onLoginSuccess }) {
       const trimmedEmail = email.trim().toLowerCase();
 
       if (selectedRole === 'admin') {
-        const isOfficialAdmin = (trimmedEmail === 'phoenixgym.vkp@gmail.com' || trimmedEmail === 'phoenixfitnesscentre03@gmail.com') && password === 'phoenix fitness centre';
-        const isDemoAdmin = trimmedEmail === 'admin@phoenixgym.com' && password === 'admin123';
+        const isOfficialAdmin = (trimmedEmail === 'phoenixgym.vkp@gmail.com' || trimmedEmail === 'phoenixfitnesscentre03@gmail.com') && (password === 'phoenix fitness academy' || password === 'phoenix fitness centre');
+        const isDemoAdmin = trimmedEmail === 'admin@phoenixgym.com' && (password === 'admin123' || password === 'phoenix fitness academy');
 
         if (isOfficialAdmin || isDemoAdmin) {
           onLoginSuccess({ email: email.trim(), name: 'Phoenix Gym Admin', role: 'admin' });
@@ -40,7 +40,7 @@ export default function Login({ onLoginSuccess }) {
           setLoading(false);
         }
       } else if (selectedRole === 'trainer') {
-        const isTrainer = (trimmedEmail === 'trainer@phoenixgym.com' || trimmedEmail === 'trainer03' || trimmedEmail === 'phoenix_trainer') && (password === 'trainer fitness centre' || password === 'trainer123');
+        const isTrainer = (trimmedEmail === 'trainer@phoenixgym.com' || trimmedEmail === 'trainer03' || trimmedEmail === 'phoenix_trainer') && (password === 'trainer fitness academy' || password === 'trainer fitness centre' || password === 'trainer123');
 
         if (isTrainer) {
           onLoginSuccess({ email: email.trim(), name: 'Phoenix Gym Coach', role: 'trainer' });
@@ -64,7 +64,7 @@ export default function Login({ onLoginSuccess }) {
           <div className="inline-flex p-1.5 bg-zinc-950 border border-red-500/30 rounded-3xl mb-4 shadow-xl shadow-red-950/20">
             <img src={phoenixLogo} alt="Phoenix Logo" className="w-16 h-16 object-contain animate-pulse" />
           </div>
-          <h2 className="text-3xl font-extrabold text-white tracking-tight">Phoenix Fitness Gym</h2>
+          <h2 className="text-3xl font-extrabold text-white tracking-tight">Phoenix Fitness Academy</h2>
           <p className="text-zinc-400 text-sm mt-1">Management Portal & Telemetry Console</p>
         </div>
 
@@ -183,13 +183,13 @@ export default function Login({ onLoginSuccess }) {
                 <>
                   <p className="font-bold text-zinc-200 uppercase">Administrator Credentials</p>
                   <p className="mt-1">Email: <code className="text-red-400 font-mono">phoenixgym.vkp@gmail.com</code></p>
-                  <p className="mt-0.5">Password: <code className="text-red-400 font-mono">phoenix fitness centre</code></p>
+                  <p className="mt-0.5">Password: <code className="text-red-400 font-mono">phoenix fitness academy</code></p>
                 </>
               ) : (
                 <>
                   <p className="font-bold text-zinc-200 uppercase">Trainer Credentials</p>
                   <p className="mt-1">Username: <code className="text-emerald-400 font-mono">trainer@phoenixgym.com</code></p>
-                  <p className="mt-0.5">Password: <code className="text-emerald-400 font-mono">trainer fitness centre</code></p>
+                  <p className="mt-0.5">Password: <code className="text-emerald-400 font-mono">trainer fitness academy</code></p>
                 </>
               )}
             </div>

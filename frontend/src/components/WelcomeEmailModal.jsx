@@ -27,12 +27,12 @@ export default function WelcomeEmailModal({ member, onClose, onEmailSent }) {
 
   if (!member) return null;
 
-  const gymName = "Phoenix Fitness Centre";
+  const gymName = "Phoenix Fitness Academy";
   const contactPhone = "+91 8015552425";
   const contactEmail = "phoenixgym.vkp@gmail.com";
   const clientEmail = member.email || 'member@gmail.com';
   const clientName = member.fullName || 'Gym Member';
-  const clientId = member.id || 'PXM-1001';
+  const clientId = member.id || 'PFM-1001';
   const clientPhone = member.whatsapp || member.phone || '+91 8015552425';
   const planName = member.plan || 'Monthly';
   const startDate = member.startDate || new Date().toISOString().split('T')[0];
@@ -42,11 +42,11 @@ export default function WelcomeEmailModal({ member, onClose, onEmailSent }) {
   const paymentMethod = 'UPI';
 
   // 1. WhatsApp Template
-  const whatsappWelcomeText = `🏋️ *WELCOME TO PHOENIX FITNESS CENTRE!* 🏋️
+  const whatsappWelcomeText = `🏋️ *WELCOME TO PHOENIX FITNESS ACADEMY!* 🏋️
 
 Hello *${clientName}*,
 
-Welcome to the Phoenix Fitness family! 💪 We are thrilled to partner with you on your fitness journey.
+Welcome to the Phoenix Fitness Academy family! 💪 We are thrilled to partner with you on your fitness journey.
 
 📋 *YOUR MEMBERSHIP DETAILS:*
 • Member ID: *${clientId}*
@@ -413,7 +413,7 @@ ${gymName} Team`;
                   <div className="flex items-center gap-3">
                     <img src={phoenixLogo} alt="Phoenix Logo" className="w-12 h-12 object-contain" />
                     <div>
-                      <h1 className="text-lg font-black text-white tracking-tight uppercase">PHOENIX FITNESS CENTRE</h1>
+                      <h1 className="text-lg font-black text-white tracking-tight uppercase">PHOENIX FITNESS ACADEMY</h1>
                       <p className="text-[11px] text-zinc-400 font-semibold">Modern Gym &amp; Personal Fitness Academy</p>
                       <p className="text-[10px] text-zinc-500">Contact: +91 8015552425 | phoenixgym.vkp@gmail.com</p>
                     </div>

@@ -14,7 +14,7 @@ const getRelativeDateStr = (daysAhead) => {
 
 const DEFAULT_MEMBERS = [
   {
-    id: "PXM-1001",
+    id: "PFM-1001",
     fullName: "Hari Ram Kumar",
     phone: "+91 8015552425",
     whatsapp: "+91 8015552425",
@@ -44,7 +44,7 @@ const DEFAULT_MEMBERS = [
     notes: "Primary registered gym member. 3 days before expiry."
   },
   {
-    id: "PXM-1002",
+    id: "PFM-1002",
     fullName: "Aravind Swamy",
     phone: "+91 9487817302",
     whatsapp: "+91 9487817302",
@@ -74,7 +74,7 @@ const DEFAULT_MEMBERS = [
     notes: "Requires urgent 1-day reminder (Expires tomorrow)."
   },
   {
-    id: "PXM-1003",
+    id: "PFM-1003",
     fullName: "Vijay Sethupathi",
     phone: "+91 9487817303",
     whatsapp: "+91 9487817303",
@@ -104,7 +104,7 @@ const DEFAULT_MEMBERS = [
     notes: "Quarterly plan ending in 3 days."
   },
   {
-    id: "PXM-1004",
+    id: "PFM-1004",
     fullName: "Sivakarthikeyan",
     phone: "+91 9487817304",
     whatsapp: "+91 9487817304",
@@ -134,7 +134,7 @@ const DEFAULT_MEMBERS = [
     notes: "Monthly fee payment pending (Expires tomorrow)."
   },
   {
-    id: "PXM-1005",
+    id: "PFM-1005",
     fullName: "Karthik Raja",
     phone: "+91 9487817305",
     whatsapp: "+91 9487817305",
@@ -164,7 +164,7 @@ const DEFAULT_MEMBERS = [
     notes: "3 days expiry reminder scheduled."
   },
   {
-    id: "PXM-1006",
+    id: "PFM-1006",
     fullName: "Priya Dharshini",
     phone: "+91 9487817306",
     whatsapp: "+91 9487817306",
@@ -194,7 +194,7 @@ const DEFAULT_MEMBERS = [
     notes: "Half-yearly subscription expiring tomorrow."
   },
   {
-    id: "PXM-1007",
+    id: "PFM-1007",
     fullName: "Suresh Raina",
     phone: "+91 9487817307",
     whatsapp: "+91 9487817307",
@@ -224,7 +224,7 @@ const DEFAULT_MEMBERS = [
     notes: "Regular athlete - membership fee payment pending."
   },
   {
-    id: "PXM-1008",
+    id: "PFM-1008",
     fullName: "Ananya Ram",
     phone: "+91 9487817308",
     whatsapp: "+91 9487817308",
@@ -254,7 +254,7 @@ const DEFAULT_MEMBERS = [
     notes: "Yearly privileged membership (16 days left)."
   },
   {
-    id: "PXM-1009",
+    id: "PFM-1009",
     fullName: "Dinesh Kumar",
     phone: "+91 9487817309",
     whatsapp: "+91 9487817309",
@@ -284,7 +284,7 @@ const DEFAULT_MEMBERS = [
     notes: "Newly enrolled active member (30 days left)."
   },
   {
-    id: "PXM-1010",
+    id: "PFM-1010",
     fullName: "Surya Prakash",
     phone: "+91 9487817310",
     whatsapp: "+91 9487817310",
@@ -316,7 +316,7 @@ const DEFAULT_MEMBERS = [
 ];
 
 const DEFAULT_SETTINGS = {
-  gymName: "Phoenix Fitness Gym",
+  gymName: "Phoenix Fitness Academy",
   currency: "INR",
   membershipPlans: [
     { name: "Monthly", durationMonths: 1, price: 1000 },
@@ -327,14 +327,14 @@ const DEFAULT_SETTINGS = {
 };
 
 const DEFAULT_PAYMENTS = [
-  { id: "TXN-101", clientId: "PXM-1001", clientName: "Hari Ram Kumar", amount: 1000, date: "2026-08-08", plan: "Monthly", method: "UPI" },
-  { id: "TXN-102", clientId: "PXM-1002", clientName: "Aravind Swamy", amount: 1000, date: "2026-08-06", plan: "Monthly", method: "UPI" },
-  { id: "TXN-103", clientId: "PXM-1003", clientName: "Vijay Sethupathi", amount: 2700, date: "2026-06-08", plan: "Quarterly", method: "UPI" },
-  { id: "TXN-105", clientId: "PXM-1005", clientName: "Karthik Raja", amount: 1000, date: "2026-08-08", plan: "Monthly", method: "UPI" },
-  { id: "TXN-106", clientId: "PXM-1006", clientName: "Priya Dharshini", amount: 5000, date: "2026-03-06", plan: "Half-Yearly", method: "UPI" },
-  { id: "TXN-108", clientId: "PXM-1008", clientName: "Ananya Ram", amount: 9000, date: "2025-09-20", plan: "Yearly", method: "UPI" },
-  { id: "TXN-109", clientId: "PXM-1009", clientName: "Dinesh Kumar", amount: 1000, date: "2026-09-04", plan: "Monthly", method: "UPI" },
-  { id: "TXN-110", clientId: "PXM-1010", clientName: "Surya Prakash", amount: 2700, date: "2026-08-05", plan: "Quarterly", method: "UPI" }
+  { id: "TXN-101", clientId: "PFM-1001", clientName: "Hari Ram Kumar", amount: 1000, date: "2026-08-08", plan: "Monthly", method: "UPI" },
+  { id: "TXN-102", clientId: "PFM-1002", clientName: "Aravind Swamy", amount: 1000, date: "2026-08-06", plan: "Monthly", method: "UPI" },
+  { id: "TXN-103", clientId: "PFM-1003", clientName: "Vijay Sethupathi", amount: 2700, date: "2026-06-08", plan: "Quarterly", method: "UPI" },
+  { id: "TXN-105", clientId: "PFM-1005", clientName: "Karthik Raja", amount: 1000, date: "2026-08-08", plan: "Monthly", method: "UPI" },
+  { id: "TXN-106", clientId: "PFM-1006", clientName: "Priya Dharshini", amount: 5000, date: "2026-03-06", plan: "Half-Yearly", method: "UPI" },
+  { id: "TXN-108", clientId: "PFM-1008", clientName: "Ananya Ram", amount: 9000, date: "2025-09-20", plan: "Yearly", method: "UPI" },
+  { id: "TXN-109", clientId: "PFM-1009", clientName: "Dinesh Kumar", amount: 1000, date: "2026-09-04", plan: "Monthly", method: "UPI" },
+  { id: "TXN-110", clientId: "PFM-1010", clientName: "Surya Prakash", amount: 2700, date: "2026-08-05", plan: "Quarterly", method: "UPI" }
 ];
 
 const DEFAULT_REMINDERS = [
@@ -640,7 +640,7 @@ export const logWelcomeEmail = (member) => {
     date: today,
     type: 'Email',
     status: 'Sent',
-    message: `[Welcome Message] Welcome to Phoenix Fitness Centre sent to ${member.email || member.fullName}`
+    message: `[Welcome Message] Welcome to Phoenix Fitness Academy sent to ${member.email || member.fullName}`
   };
   const updated = [newLog, ...reminders];
   saveReminders(updated);
@@ -739,16 +739,52 @@ export const recordMemberWelcomeWhatsApp = (memberId) => recordMemberWelcome(mem
 // Seed utility to fully initialize all stores on application mount and sync database version
 export const initializeDb = () => {
   const currentVersion = localStorage.getItem('phoenix_gym_db_ver');
-  if (currentVersion !== 'v6_production_payments') {
-    const existingMembers = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!existingMembers) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERS));
-      localStorage.setItem(PAYMENTS_KEY, JSON.stringify(DEFAULT_PAYMENTS));
-      localStorage.setItem(REMINDERS_KEY, JSON.stringify(DEFAULT_REMINDERS));
-      setIdbData(LOCAL_STORAGE_KEY, DEFAULT_MEMBERS);
-      setIdbData(PAYMENTS_KEY, DEFAULT_PAYMENTS);
+  if (currentVersion !== 'v7_pfm_academy_update') {
+    try {
+      // Auto-migrate any existing PXM IDs to PFM in localStorage
+      const existingMembersRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (existingMembersRaw) {
+        const migratedMembersRaw = existingMembersRaw.replace(/"PXM-/g, '"PFM-');
+        localStorage.setItem(LOCAL_STORAGE_KEY, migratedMembersRaw);
+        try {
+          const parsed = JSON.parse(migratedMembersRaw);
+          setIdbData(LOCAL_STORAGE_KEY, parsed);
+        } catch (err) {}
+      } else {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERS));
+        setIdbData(LOCAL_STORAGE_KEY, DEFAULT_MEMBERS);
+      }
+
+      const existingPaymentsRaw = localStorage.getItem(PAYMENTS_KEY);
+      if (existingPaymentsRaw) {
+        const migratedPaymentsRaw = existingPaymentsRaw.replace(/"PXM-/g, '"PFM-');
+        localStorage.setItem(PAYMENTS_KEY, migratedPaymentsRaw);
+        try {
+          const parsed = JSON.parse(migratedPaymentsRaw);
+          setIdbData(PAYMENTS_KEY, parsed);
+        } catch (err) {}
+      } else {
+        localStorage.setItem(PAYMENTS_KEY, JSON.stringify(DEFAULT_PAYMENTS));
+        setIdbData(PAYMENTS_KEY, DEFAULT_PAYMENTS);
+      }
+
+      const existingSettingsRaw = localStorage.getItem(SETTINGS_KEY);
+      if (existingSettingsRaw) {
+        const s = JSON.parse(existingSettingsRaw);
+        s.gymName = "Phoenix Fitness Academy";
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+      } else {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(DEFAULT_SETTINGS));
+      }
+
+      const existingRemindersRaw = localStorage.getItem(REMINDERS_KEY);
+      if (!existingRemindersRaw) {
+        localStorage.setItem(REMINDERS_KEY, JSON.stringify(DEFAULT_REMINDERS));
+      }
+    } catch (e) {
+      console.error('Migration error in initializeDb:', e);
     }
-    localStorage.setItem('phoenix_gym_db_ver', 'v6_production_payments');
+    localStorage.setItem('phoenix_gym_db_ver', 'v7_pfm_academy_update');
   }
   getMembers();
   getSettings();

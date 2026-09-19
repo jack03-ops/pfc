@@ -1,9 +1,9 @@
-// Phoenix Fitness Centre - Data Export Utilities
+// Phoenix Fitness Academy - Data Export Utilities
 // Generates standardized Excel-compatible CSV exports directly in the browser
 
 export function downloadReportCsv({ cycle, stats, payments = [], members = [] }) {
   const rows = [];
-  rows.push(['PHOENIX FITNESS CENTRE - BUSINESS PERFORMANCE REPORT']);
+  rows.push(['PHOENIX FITNESS ACADEMY - BUSINESS PERFORMANCE REPORT']);
   rows.push(['Report Generated', new Date().toLocaleString('en-IN')]);
   rows.push(['Report Scope / Cycle', cycle]);
   rows.push([]);

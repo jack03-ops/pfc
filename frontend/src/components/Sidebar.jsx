@@ -65,7 +65,7 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
     const trimmedUser = authUsername.trim().toLowerCase();
 
     if (switchTargetRole === 'admin') {
-      const isOfficialAdmin = (trimmedUser === 'phoenixgym.vkp@gmail.com' || trimmedUser === 'phoenixfitnesscentre03@gmail.com' || trimmedUser === 'admin@phoenixgym.com') && (authPassword === 'phoenix fitness centre' || authPassword === 'admin123');
+      const isOfficialAdmin = (trimmedUser === 'phoenixgym.vkp@gmail.com' || trimmedUser === 'phoenixfitnesscentre03@gmail.com' || trimmedUser === 'admin@phoenixgym.com') && (authPassword === 'phoenix fitness academy' || authPassword === 'phoenix fitness centre' || authPassword === 'admin123');
       if (isOfficialAdmin) {
         onRoleChange('admin', { email: authUsername.trim(), name: 'Phoenix Gym Admin', role: 'admin' });
         setSwitchTargetRole(null);
@@ -74,7 +74,7 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
         setAuthError('Invalid Administrator password. Please check your credentials.');
       }
     } else if (switchTargetRole === 'trainer') {
-      const isTrainer = (trimmedUser === 'trainer@phoenixgym.com' || trimmedUser === 'trainer03' || trimmedUser === 'phoenix_trainer') && (authPassword === 'trainer fitness centre' || authPassword === 'trainer123');
+      const isTrainer = (trimmedUser === 'trainer@phoenixgym.com' || trimmedUser === 'trainer03' || trimmedUser === 'phoenix_trainer') && (authPassword === 'trainer fitness academy' || authPassword === 'trainer fitness centre' || authPassword === 'trainer123');
       if (isTrainer) {
         onRoleChange('trainer', { email: authUsername.trim(), name: 'Phoenix Gym Coach', role: 'trainer' });
         setSwitchTargetRole(null);
@@ -95,7 +95,7 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
           </div>
           <div>
             <h1 className="text-sm font-black text-white leading-tight">Phoenix Fitness</h1>
-            <span className="text-[9px] text-red-500 font-bold uppercase tracking-wider block">Centre Core</span>
+            <span className="text-[9px] text-red-500 font-bold uppercase tracking-wider block">Academy</span>
           </div>
         </div>
 
@@ -140,11 +140,11 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
           <div className="p-5 flex items-center justify-between border-b border-zinc-900">
             <div className="flex items-center gap-3">
               <div className="p-1.5 rounded-2xl border border-red-500/40 bg-zinc-950/90 shrink-0 shadow-md shadow-red-950/40">
-                <img src={phoenixLogo} alt="Phoenix Fitness Centre Logo" className="w-10 h-10 object-contain" />
+                <img src={phoenixLogo} alt="Phoenix Fitness Academy Logo" className="w-10 h-10 object-contain" />
               </div>
               <div>
                 <h1 className="text-base font-black tracking-tight text-white m-0 leading-tight">Phoenix Fitness</h1>
-                <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider block mt-0.5">Centre Core</span>
+                <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider block mt-0.5">Academy</span>
               </div>
             </div>
 
@@ -312,7 +312,7 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
               <div className="p-2.5 bg-zinc-900/60 border border-zinc-800/80 rounded-xl text-[10px] text-zinc-400">
                 <p className="font-bold text-zinc-300 uppercase">{switchTargetRole.toUpperCase()} Credentials</p>
                 <p className="mt-0.5">User: <code className="text-red-400 font-mono">{switchTargetRole === 'admin' ? 'phoenixgym.vkp@gmail.com' : 'trainer@phoenixgym.com'}</code></p>
-                <p className="mt-0.5">Pass: <code className="text-emerald-400 font-mono">{switchTargetRole === 'admin' ? 'phoenix fitness centre' : 'trainer fitness centre'}</code></p>
+                <p className="mt-0.5">Pass: <code className="text-emerald-400 font-mono">{switchTargetRole === 'admin' ? 'phoenix fitness academy' : 'trainer fitness academy'}</code></p>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">

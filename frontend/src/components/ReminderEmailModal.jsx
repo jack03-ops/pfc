@@ -11,12 +11,12 @@ export default function ReminderEmailModal({ member, daysLeft = 3, onClose, onEm
   if (!member) return null;
 
   const isFinal = daysLeft === 1;
-  const gymName = "Phoenix Fitness Centre";
+  const gymName = "Phoenix Fitness Academy";
   const contactPhone = "+91 8015552425";
   const contactEmail = "phoenixgym.vkp@gmail.com";
   const clientEmail = member.email || 'member@gmail.com';
   const clientName = member.fullName || 'Gym Member';
-  const clientId = member.id || 'PXM-1001';
+  const clientId = member.id || 'PFM-1001';
   const planName = member.plan || 'Monthly';
   const endDate = member.endDate || '2026-09-07';
   const invoiceNo = `PFC-RNW-${clientId.replace(/\D/g, '') || '101'}`;
@@ -291,7 +291,7 @@ Address: Near Temple, Rampur`;
                   <div className="flex items-center gap-3">
                     <img src={phoenixLogo} alt="Phoenix Logo" className="w-12 h-12 object-contain" />
                     <div>
-                      <h1 className="text-lg font-black text-white tracking-tight uppercase">PHOENIX FITNESS CENTRE</h1>
+                      <h1 className="text-lg font-black text-white tracking-tight uppercase">PHOENIX FITNESS ACADEMY</h1>
                       <p className="text-[11px] text-zinc-400 font-semibold">Modern Gym & Personal Fitness Academy</p>
                       <p className="text-[10px] text-zinc-500">Contact: +91 8015552425 | phoenixgym.vkp@gmail.com</p>
                     </div>

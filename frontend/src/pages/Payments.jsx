@@ -30,8 +30,8 @@ export default function Payments({ members, payments, onAddPayment, onMarkAsPaid
   const upiTxnRef = useMemo(() => `TXN-${Date.now().toString().slice(-6)}`, [newPayment.clientId, newPayment.amount]);
   const dynamicUpiUrl = useMemo(() => {
     const fee = Number(newPayment.amount) || 1000;
-    const cid = newPayment.clientId || 'PXM';
-    return `upi://pay?pa=phoenixgym.vkp@oksbi&pn=Phoenix%20Fitness%20Centre&am=${fee}&tr=${upiTxnRef}&tn=Fee_${cid}&cu=INR`;
+    const cid = newPayment.clientId || 'PFM';
+    return `upi://pay?pa=phoenixgym.vkp@oksbi&pn=Phoenix%20Fitness%20Academy&am=${fee}&tr=${upiTxnRef}&tn=Fee_${cid}&cu=INR`;
   }, [newPayment.amount, newPayment.clientId, upiTxnRef]);
   const qrCodeUrl = useMemo(() => {
     return `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(dynamicUpiUrl)}`;

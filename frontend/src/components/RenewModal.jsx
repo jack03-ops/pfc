@@ -48,8 +48,8 @@ export default function RenewModal({ member, allMembers = [], onClose, onConfirm
 
   const dynamicUpiUrl = useMemo(() => {
     const fee = Number(renewalAmount) || 1000;
-    const cid = currentMember?.id || 'PXM';
-    return `upi://pay?pa=phoenixgym.vkp@oksbi&pn=Phoenix%20Fitness%20Centre&am=${fee}&tr=${upiTxnRef}&tn=Renewal_${cid}&cu=INR`;
+    const cid = currentMember?.id || 'PFM';
+    return `upi://pay?pa=phoenixgym.vkp@oksbi&pn=Phoenix%20Fitness%20Academy&am=${fee}&tr=${upiTxnRef}&tn=Renewal_${cid}&cu=INR`;
   }, [renewalAmount, currentMember?.id, upiTxnRef]);
 
   const qrCodeUrl = useMemo(() => {
