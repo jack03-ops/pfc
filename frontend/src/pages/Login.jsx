@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, Dumbbell, ShieldCheck, Clock, AlertTriangle } from 'lucide-react';
+import { Lock, Mail, ShieldCheck, Clock, AlertTriangle } from 'lucide-react';
 import phoenixLogo from '../assets/phoenix_logo.png';
 
 export default function Login({ onLoginSuccess, logoutReason }) {
@@ -59,14 +59,9 @@ export default function Login({ onLoginSuccess, logoutReason }) {
         <div className="glass-panel p-5 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden border border-zinc-900">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-red-600 via-rose-600 to-cyan-500" />
           
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h3 className="text-base font-bold text-white">Administrator Sign In</h3>
-              <p className="text-[11px] text-zinc-400 mt-0.5">Enter admin credentials to manage gym operations</p>
-            </div>
-            <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border bg-red-500/15 text-red-400 border-red-500/30 shrink-0">
-              👑 Admin Only
-            </span>
+          <div className="mb-5">
+            <h3 className="text-base font-bold text-white">Administrator Sign In</h3>
+            <p className="text-[11px] text-zinc-400 mt-0.5">Enter admin credentials to manage gym operations</p>
           </div>
 
           {error && (
@@ -126,29 +121,6 @@ export default function Login({ onLoginSuccess, logoutReason }) {
               )}
             </button>
           </form>
-
-          {/* Security & auto-logout notice */}
-          <div className="mt-5 p-3 bg-zinc-950 border border-zinc-900 rounded-2xl flex gap-3 items-center">
-            <div className="p-2 rounded-xl shrink-0 bg-amber-500/10 text-amber-400">
-              <Clock className="w-4 h-4" />
-            </div>
-            <div className="text-[10px] text-zinc-400 leading-tight">
-              <span className="text-zinc-300 font-bold block mb-0.5">Session Security Protection</span>
-              <span>Inactive sessions automatically log out after 20 minutes to prevent unauthorized access.</span>
-            </div>
-          </div>
-
-          {/* Credentials helper box */}
-          <div className="mt-3 p-3 bg-zinc-950 border border-zinc-900 rounded-2xl flex gap-3 items-center">
-            <div className="p-2 rounded-xl shrink-0 bg-red-500/10 text-red-400">
-              <Dumbbell className="w-4 h-4" />
-            </div>
-            <div className="text-[10px] text-zinc-400 leading-tight">
-              <p className="font-bold text-zinc-200 uppercase">Administrator Credentials</p>
-              <p className="mt-1">Email: <code className="text-red-400 font-mono">phoenixgym.vkp@gmail.com</code></p>
-              <p className="mt-0.5">Password: <code className="text-emerald-400 font-mono">phoenix fitness academy</code></p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
