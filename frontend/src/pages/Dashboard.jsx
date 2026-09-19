@@ -9,10 +9,6 @@ import {
   Plus,
   RefreshCw,
   Send,
-  BellRing,
-  CheckCircle2,
-  XCircle,
-  Clock,
   Dumbbell
 } from 'lucide-react';
 import StatCard from '../components/StatCard';
@@ -64,15 +60,7 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
     };
   }, [members, payments]);
 
-  // 2. Compute Reminder Statistics
-  const reminderStats = useMemo(() => {
-    const sent = reminders.filter(r => r.status === 'Sent').length;
-    const failed = reminders.filter(r => r.status === 'Failed').length;
-    const pending = reminders.filter(r => r.status === 'Pending').length;
-    return { sent, failed, pending };
-  }, [reminders]);
-
-  // 3. Automated Expiry Reminders Scheduling Action (Scans 1, 3, and 5 days before expiry)
+  // 2. Automated Expiry Reminders Scheduling Action (Scans 1, 3, and 5 days before expiry)
   const handleTriggerReminders = () => {
     setTriggerStatus('Scanning database for expiring memberships...');
     
@@ -240,73 +228,6 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
             {triggerStatus}
           </div>
         )}
-      </div>
-
-      {/* Reminder Dispatch Monitor */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Reminder Stats widgets */}
-        <div className="glass-panel p-6 rounded-2xl border border-zinc-900 flex flex-col justify-between space-y-6">
-          <div>
-            <h4 className="text-xs font-black text-white uppercase tracking-wider mb-1.5">Reminder Logs Monitor</h4>
-            <p className="text-[10px] text-zinc-400">Total automated expiration warnings stats</p>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-3">
-            <div className="p-3 bg-zinc-950 border border-zinc-900 rounded-xl text-center">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto mb-1.5" />
-              <span className="text-[9px] font-bold text-zinc-500 uppercase">Sent</span>
-              <h5 className="text-base font-extrabold text-white mt-0.5">{reminderStats.sent}</h5>
-            </div>
-            <div className="p-3 bg-zinc-950 border border-zinc-900 rounded-xl text-center">
-              <Clock className="w-5 h-5 text-amber-500 mx-auto mb-1.5 animate-pulse" />
-              <span className="text-[9px] font-bold text-zinc-500 uppercase">Pending</span>
-              <h5 className="text-base font-extrabold text-white mt-0.5">{reminderStats.pending}</h5>
-            </div>
-            <div className="p-3 bg-zinc-950 border border-zinc-900 rounded-xl text-center">
-              <XCircle className="w-5 h-5 text-rose-500 mx-auto mb-1.5" />
-              <span className="text-[9px] font-bold text-zinc-500 uppercase">Failed</span>
-              <h5 className="text-base font-extrabold text-white mt-0.5">{reminderStats.failed}</h5>
-            </div>
-          </div>
-
-          <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl">
-            <span className="text-[10px] font-bold text-red-400 block mb-1">Target Phone Testing Line</span>
-            <p className="text-[10px] text-zinc-400 leading-normal">
-              Active test WhatsApp endpoint set to: <code className="text-white font-bold">8015552425</code>
-            </p>
-          </div>
-        </div>
-
-        {/* Recent Reminder Logs Table */}
-        <div className="glass-panel p-6 rounded-2xl border border-zinc-900 lg:col-span-2">
-          <h4 className="text-xs font-black text-white uppercase tracking-wider mb-4 border-b border-zinc-900 pb-3 flex items-center gap-2">
-            <BellRing className="w-4 h-4 text-red-500" />
-            Recent WhatsApp Dispatches Logs
-          </h4>
-          <div className="overflow-y-auto max-h-[180px] space-y-3 pr-1">
-            {reminders.length > 0 ? (
-              reminders.map((log) => (
-                <div key={log.id} className="p-3 bg-zinc-950/60 border border-zinc-900 rounded-xl flex items-center justify-between gap-4 text-[11px]">
-                  <div className="min-w-0">
-                    <p className="font-bold text-white flex items-center gap-1.5">
-                      {log.clientName}
-                      <span className="text-[9px] text-zinc-500 font-semibold">{log.phone}</span>
-                    </p>
-                    <p className="text-[10px] text-zinc-400 mt-1 truncate max-w-[320px]">{log.message}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      {log.status}
-                    </span>
-                    <p className="text-[9px] text-zinc-500 font-semibold mt-1">{log.date}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-zinc-500 text-center py-8">No expiration alerts logged yet.</p>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );

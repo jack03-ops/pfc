@@ -128,26 +128,14 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
           </nav>
         </div>
 
-        {/* User Role Badge */}
+        {/* Sign out footer */}
         <div className="p-4 border-t border-zinc-900 bg-zinc-950/60">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Access Level</span>
-            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase border bg-red-500/15 text-red-400 border-red-500/30">
-              👑 Administrator
-            </span>
-          </div>
-          <div className="mb-3">
-            <p className="text-xs font-bold text-white truncate">{user?.name || 'Phoenix Gym Admin'}</p>
-            <p className="text-[10px] text-zinc-400 truncate">{user?.email || 'phoenixgym.vkp@gmail.com'}</p>
-          </div>
-
-          {/* Logout button */}
           <button
             onClick={() => {
               setMobileOpen(false);
               onLogout();
             }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 cursor-pointer font-semibold text-xs"
+            className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 cursor-pointer font-semibold text-xs border border-red-500/20"
           >
             <LogOut className="w-4 h-4" />
             <span>Sign Out</span>
