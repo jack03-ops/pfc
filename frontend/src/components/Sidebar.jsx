@@ -4,7 +4,6 @@ import {
   Users, 
   UserPlus, 
   CreditCard, 
-  BarChart3, 
   Bell, 
   Settings, 
   LogOut,
@@ -34,7 +33,6 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
     { id: 'members', label: 'Members List', icon: Users },
     { id: 'add-member', label: 'Add Member', icon: UserPlus },
     { id: 'payments', label: 'Payments', icon: CreditCard },
-    { id: 'reports', label: 'Reports', icon: BarChart3 },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];

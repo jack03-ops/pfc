@@ -5,7 +5,6 @@ import Dashboard from './pages/Dashboard';
 import MembersList from './pages/MembersList';
 import MemberForm from './pages/MemberForm';
 import Payments from './pages/Payments';
-import Reports from './pages/Reports';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
 import WelcomeEmailModal from './components/WelcomeEmailModal';
@@ -451,8 +450,6 @@ export default function App() {
             userRole={userRole}
           />
         );
-      case 'reports':
-        return <Reports members={members} payments={payments} userRole={userRole} />;
       case 'notifications':
         return (
           <Notifications 
@@ -490,7 +487,6 @@ export default function App() {
     'add-member': 'Enroll Gym Member',
     'edit-member': 'Modify Member Profile',
     payments: 'Billing & Fee Receipts',
-    reports: 'System Performance Reports',
     notifications: 'Alert Center Feed',
     settings: 'Gym configurations & custom pricing',
   };

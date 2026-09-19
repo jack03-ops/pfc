@@ -9,7 +9,6 @@ import {
   Plus,
   RefreshCw,
   Send,
-  BarChart3,
   BellRing,
   CheckCircle2,
   XCircle,
@@ -17,10 +16,6 @@ import {
   Dumbbell
 } from 'lucide-react';
 import StatCard from '../components/StatCard';
-import { 
-  MembershipGrowthChart, 
-  MemberDistributionChart 
-} from '../components/Charts';
 import { getReminders, saveReminders } from '../db/mockDb';
 
 export default function Dashboard({ members, payments, setPage, onRenewMember }) {
@@ -206,7 +201,7 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
       {/* Quick Action buttons panel */}
       <div className="glass-panel p-6 rounded-2xl border border-zinc-900 space-y-4">
         <h3 className="text-xs font-black text-white uppercase tracking-wider">Quick Actions Console</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <button
             onClick={() => setPage('add-member')}
             className="flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group"
@@ -238,14 +233,6 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
           >
             <Send className="w-6 h-6 text-red-500 mb-2 group-hover:scale-110 transition-transform" />
             <span className="text-xs font-semibold text-white">Send Reminders</span>
-          </button>
-
-          <button
-            onClick={() => setPage('reports')}
-            className="flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group"
-          >
-            <BarChart3 className="w-6 h-6 text-red-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-semibold text-white">View Reports</span>
           </button>
         </div>
         {triggerStatus && (
@@ -319,22 +306,6 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
               <p className="text-xs text-zinc-500 text-center py-8">No expiration alerts logged yet.</p>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Analytics Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="glass-panel p-6 rounded-2xl border border-zinc-900 lg:col-span-2">
-          <h4 className="text-xs font-black text-white uppercase tracking-wider mb-4">Membership Registrations Growth</h4>
-          <MembershipGrowthChart />
-        </div>
-
-        <div className="glass-panel p-6 rounded-2xl border border-zinc-900 flex flex-col justify-between">
-          <div>
-            <h4 className="text-xs font-black text-white uppercase tracking-wider mb-2">Member Distribution</h4>
-            <p className="text-[10px] text-zinc-400 mb-6">Ratio of active vs inactive members</p>
-          </div>
-          <MemberDistributionChart activeCount={metrics.active} inactiveCount={members.length - metrics.active} />
         </div>
       </div>
     </div>
