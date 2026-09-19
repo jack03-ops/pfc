@@ -399,15 +399,13 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                           </button>
 
                           {/* Edit button */}
-                          {userRole !== 'trainer' && (
-                            <button
-                              onClick={() => onEditMember(member)}
-                              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-zinc-900 rounded-lg transition-all cursor-pointer"
-                              title="Edit Profile"
-                            >
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => onEditMember(member)}
+                            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-zinc-900 rounded-lg transition-all cursor-pointer"
+                            title="Edit Profile"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
                           
                           {/* Send Welcome (WhatsApp & Email) button */}
                           {(member.email || member.phone || member.whatsapp) && (
@@ -420,16 +418,14 @@ export default function MembersList({ members, onDeleteMember, onToggleStatus, o
                             </button>
                           )}
 
-                          {/* Delete button (Admin only) */}
-                          {userRole === 'admin' && (
-                            <button
-                              onClick={() => onDeleteMember(member.id)}
-                              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
-                              title="Delete Member (Soft Delete)"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
+                          {/* Delete button */}
+                          <button
+                            onClick={() => onDeleteMember(member.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
+                            title="Delete Member (Soft Delete)"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>

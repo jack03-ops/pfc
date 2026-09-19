@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Save, Plus, Trash2, Shield, Heart } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Plus, Trash2, Shield, Clock, ShieldCheck } from 'lucide-react';
 import { getSettings, saveSettings } from '../db/mockDb';
+import phoenixLogo from '../assets/phoenix_logo.png';
 
 export default function Settings({ onSettingsUpdate }) {
   const [settings, setSettings] = useState(getSettings());
@@ -190,11 +191,26 @@ export default function Settings({ onSettingsUpdate }) {
         {/* Security & System sidecards */}
         <div className="space-y-6">
           <div className="glass-panel p-6 rounded-2xl border border-zinc-900 text-center space-y-4">
-            <Heart className="w-8 h-8 text-rose-500 mx-auto animate-pulse" />
-            <h3 className="text-sm font-black text-white uppercase tracking-wider">Phoenix Fitness</h3>
+            <div className="inline-flex p-3 bg-zinc-950 border border-red-500/30 rounded-2xl mx-auto shadow-xl shadow-red-950/20">
+              <img src={phoenixLogo} alt="Phoenix Fitness Academy Logo" className="w-16 h-16 object-contain" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Phoenix Fitness Academy</h3>
+              <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider">Administration Console</span>
+            </div>
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Designed with robust responsive grid layout support and buttery smooth layouts using Framer Motion capabilities.
+              Official branding & telemetry console. Membership rules and custom fee structures synchronize directly with cloud storage.
             </p>
+
+            <div className="p-3 bg-zinc-950/70 border border-zinc-800/80 rounded-xl text-left space-y-1.5 text-[10px]">
+              <div className="flex items-center gap-1.5 text-zinc-300 font-bold">
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <span>Session Security</span>
+              </div>
+              <p className="text-zinc-400 leading-normal">
+                Automatic logout enforces after <strong>20 minutes</strong> of inactivity for data safety.
+              </p>
+            </div>
             
             <button
               onClick={handleSaveAll}

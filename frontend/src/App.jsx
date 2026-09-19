@@ -38,6 +38,8 @@ export default function App() {
   const [renewModalMember, setRenewModalMember] = useState(null);
   const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
   const [clearedNotificationIds, setClearedNotificationIds] = useState(() => getClearedNotificationIds());
+  const [logoutReason, setLogoutReason] = useState('');
+  const INACTIVITY_TIMEOUT_MS = 20 * 60 * 1000; // Auto log out after 20 minutes of inactivity
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -113,15 +115,25 @@ export default function App() {
     setMembers(getMembers());
     setPayments(getPayments());
 
-    // Auto login check with default Admin role
+    // Auto login check with default Admin role and 20-min inactivity check
     const savedUser = localStorage.getItem('phoenix_gym_session');
+    const lastActivity = Number(localStorage.getItem('phoenix_last_activity') || 0);
+
     if (savedUser) {
-      try {
-        const parsed = JSON.parse(savedUser);
-        const role = parsed.role === 'trainer' ? 'trainer' : 'admin';
-        setUser({ ...parsed, role });
-      } catch (e) {
-        setUser({ email: 'phoenixgym.vkp@gmail.com', name: 'Phoenix Gym Admin', role: 'admin' });
+      if (lastActivity && Date.now() - lastActivity > INACTIVITY_TIMEOUT_MS) {
+        localStorage.removeItem('phoenix_gym_session');
+        localStorage.removeItem('phoenix_last_activity');
+        setUser(null);
+        setLogoutReason('Your session expired after 20 minutes of inactivity. Please re-login.');
+      } else {
+        try {
+          const parsed = JSON.parse(savedUser);
+          setUser({ ...parsed, role: 'admin' });
+          localStorage.setItem('phoenix_last_activity', String(Date.now()));
+        } catch (e) {
+          setUser({ email: 'phoenixgym.vkp@gmail.com', name: 'Phoenix Gym Admin', role: 'admin' });
+          localStorage.setItem('phoenix_last_activity', String(Date.now()));
+        }
       }
     }
 
@@ -159,23 +171,67 @@ export default function App() {
     };
   }, []);
 
-  const handleLoginSuccess = (userData) => {
-    const userWithRole = { role: userData.role || 'admin', ...userData };
-    setUser(userWithRole);
-    localStorage.setItem('phoenix_gym_session', JSON.stringify(userWithRole));
-  };
-
-  const handleRoleChange = (newRole, newUserData) => {
+  // Automatic session auto-logout after 20 minutes of user inactivity
+  useEffect(() => {
     if (!user) return;
-    const updated = { ...user, role: newRole, ...(newUserData || {}) };
-    setUser(updated);
-    localStorage.setItem('phoenix_gym_session', JSON.stringify(updated));
-    showToast(`Role switched to ${newRole.toUpperCase()}`, 'info');
+
+    let lastActivityTime = Date.now();
+    let lastStorageSync = Date.now();
+
+    const recordUserActivity = () => {
+      const now = Date.now();
+      lastActivityTime = now;
+      // Debounce writing to localStorage to once every 10 seconds
+      if (now - lastStorageSync > 10000) {
+        lastStorageSync = now;
+        localStorage.setItem('phoenix_last_activity', String(now));
+      }
+    };
+
+    const verifySessionActivity = () => {
+      const now = Date.now();
+      const storedLast = Number(localStorage.getItem('phoenix_last_activity') || lastActivityTime);
+      const latestActivity = Math.max(lastActivityTime, storedLast);
+
+      if (now - latestActivity >= INACTIVITY_TIMEOUT_MS) {
+        // Auto log out the user
+        setUser(null);
+        localStorage.removeItem('phoenix_gym_session');
+        localStorage.removeItem('phoenix_last_activity');
+        setLogoutReason('Your session expired after 20 minutes of inactivity. Please re-login.');
+        showToast('Session expired due to 20 minutes of inactivity.', 'warning');
+      }
+    };
+
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+    activityEvents.forEach(evt => window.addEventListener(evt, recordUserActivity, { passive: true }));
+    window.addEventListener('focus', verifySessionActivity);
+    document.addEventListener('visibilitychange', verifySessionActivity);
+
+    // Check inactivity periodically every 5 seconds
+    const intervalId = setInterval(verifySessionActivity, 5000);
+
+    return () => {
+      activityEvents.forEach(evt => window.removeEventListener(evt, recordUserActivity));
+      window.removeEventListener('focus', verifySessionActivity);
+      document.removeEventListener('visibilitychange', verifySessionActivity);
+      clearInterval(intervalId);
+    };
+  }, [user]);
+
+  const handleLoginSuccess = (userData) => {
+    const adminUser = { role: 'admin', name: 'Phoenix Gym Admin', ...userData };
+    setUser(adminUser);
+    setLogoutReason('');
+    localStorage.setItem('phoenix_gym_session', JSON.stringify(adminUser));
+    localStorage.setItem('phoenix_last_activity', String(Date.now()));
   };
 
   const handleLogout = () => {
     setUser(null);
+    setLogoutReason('');
     localStorage.removeItem('phoenix_gym_session');
+    localStorage.removeItem('phoenix_last_activity');
   };
 
   // Add & Update Member Handler
@@ -477,7 +533,7 @@ export default function App() {
 
   // Route guarding (Must log in to access telemetry)
   if (!user) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    return <Login onLoginSuccess={handleLoginSuccess} logoutReason={logoutReason} />;
   }
 
   // Active Title configuration
@@ -511,7 +567,6 @@ export default function App() {
         onLogout={handleLogout} 
         alertsCount={activeAlertsCount}
         user={user}
-        onRoleChange={handleRoleChange}
       />
 
       {/* Main Container Content */}
