@@ -1,23 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { 
-  Users, 
   UserCheck, 
   Hourglass, 
   AlertTriangle, 
-  TrendingUp, 
-  IndianRupee,
-  Plus,
-  RefreshCw,
-  Send,
-  Dumbbell
+  RefreshCw
 } from 'lucide-react';
 import StatCard from '../components/StatCard';
-import { getReminders, saveReminders } from '../db/mockDb';
 
-export default function Dashboard({ members, payments, setPage, onRenewMember }) {
-  const [reminders, setReminders] = useState(() => getReminders());
-  const [triggerStatus, setTriggerStatus] = useState('');
-
+export default function Dashboard({ members, payments, setPage }) {
   // 1. Compute summary metrics dynamically based on live members state and real-time dates
   const metrics = useMemo(() => {
     const now = new Date();
@@ -60,90 +50,6 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
     };
   }, [members, payments]);
 
-  // 2. Automated Expiry Reminders Scheduling Action (Scans 1, 3, and 5 days before expiry)
-  const handleTriggerReminders = () => {
-    setTriggerStatus('Scanning database for expiring memberships...');
-    
-    setTimeout(() => {
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const currentList = [...reminders];
-      let newDispatches = 0;
-      let duplicatesSkipped = 0;
-
-      // Scan day intervals: 1, 3, 5 days before expiry
-      const targetIntervals = [1, 3, 5];
-
-      members.forEach(member => {
-        if (member.status !== 'Active' || !member.endDate) return;
-
-        const parts = member.endDate.split('-');
-        if (parts.length !== 3) return;
-        const end = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
-        const diffTime = end.getTime() - todayStart.getTime();
-        const diffDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
-
-        if (targetIntervals.includes(diffDays)) {
-          // Send alerts via BOTH channels: WhatsApp and SMS
-          const channels = ['WhatsApp', 'SMS'];
-          
-          channels.forEach(channel => {
-            // Check if reminder was already sent to this member via this channel today to avoid duplicates
-            const alreadySentToday = currentList.some(r => 
-              (r.phone === member.phone || r.phone === "+91 8015552425") && 
-              r.date === todayStr && 
-              r.type === channel &&
-              r.message.includes(member.fullName) &&
-              r.message.includes(`expires in ${diffDays} day(s)`)
-            );
-
-            if (alreadySentToday) {
-              duplicatesSkipped++;
-              return;
-            }
-
-            // Construct exact template matching requirements
-            let reminderMessage = '';
-            if (diffDays === 5) {
-              reminderMessage = `Hello ${member.fullName}, your Phoenix Gym membership expires in 5 day(s). Please renew your membership to continue uninterrupted access. Don't break your workout streak!`;
-            } else if (diffDays === 3) {
-              reminderMessage = `Hello ${member.fullName}, your Phoenix Gym membership expires in 3 day(s). Please renew your membership to continue uninterrupted access. Early renewals keep your fitness routine on track!`;
-            } else {
-              reminderMessage = `Hello ${member.fullName}, your Phoenix Gym membership expires in 1 day(s). Please renew your membership to continue uninterrupted access. Secure your slot to avoid lockout!`;
-            }
-
-            // Log in mock db ledger
-            const newLog = {
-              id: `REM-${101 + currentList.length}`,
-              clientName: member.fullName,
-              phone: "+91 8015552425", // force use target test number
-              date: todayStr,
-              type: channel,
-              status: "Sent",
-              message: reminderMessage
-            };
-
-            currentList.unshift(newLog);
-            newDispatches++;
-          });
-        }
-      });
-
-      if (newDispatches > 0) {
-        setReminders(currentList);
-        saveReminders(currentList);
-        setTriggerStatus(`Dispatched ${newDispatches} alerts (WhatsApp & SMS) to registered test numbers successfully!`);
-      } else if (duplicatesSkipped > 0) {
-        setTriggerStatus(`All reminders for today were already sent. (${duplicatesSkipped} checks skipped to prevent duplicates)`);
-      } else {
-        setTriggerStatus('No members found expiring in exactly 1, 3, or 5 days.');
-      }
-
-      setTimeout(() => setTriggerStatus(''), 4000);
-    }, 1000);
-  };
-
   return (
     <div className="w-full max-w-full p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-60px)] md:max-h-[calc(100vh-80px)] bg-[#030303]">
       {/* Real-time Dashboard Statistics Grid */}
@@ -153,7 +59,7 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
           value={metrics.active} 
           icon={UserCheck} 
           trend="+12%" 
-          trendType="up"
+          trendType="up" 
           glowColor="red"
           onClick={() => setPage('members')}
         />
@@ -184,50 +90,6 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
           glowColor="cyan"
           onClick={() => setPage('members')}
         />
-      </div>
-
-      {/* Quick Action buttons panel */}
-      <div className="glass-panel p-6 rounded-2xl border border-zinc-900 space-y-4">
-        <h3 className="text-xs font-black text-white uppercase tracking-wider">Quick Actions Console</h3>
-        <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
-          <button
-            onClick={() => setPage('add-member')}
-            className="flex-1 flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group"
-          >
-            <Plus className="w-6 h-6 text-red-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-semibold text-white">Add Member</span>
-          </button>
-
-          <button
-            onClick={() => {
-              if (onRenewMember) {
-                const now = new Date();
-                const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-                const candidate = members.find(m => m.status === 'Expired' || (m.endDate && m.endDate <= todayStr)) || null;
-                onRenewMember(candidate);
-              } else {
-                setPage('members');
-              }
-            }}
-            className="flex-1 flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group"
-          >
-            <IndianRupee className="w-6 h-6 text-red-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-semibold text-white">Renew Membership</span>
-          </button>
-
-          <button
-            onClick={handleTriggerReminders}
-            className="flex-1 flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group relative overflow-hidden"
-          >
-            <Send className="w-6 h-6 text-red-500 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-semibold text-white">Send Reminders</span>
-          </button>
-        </div>
-        {triggerStatus && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold animate-pulse text-center">
-            {triggerStatus}
-          </div>
-        )}
       </div>
     </div>
   );
