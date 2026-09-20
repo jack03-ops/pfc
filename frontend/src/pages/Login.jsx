@@ -58,8 +58,8 @@ export default function Login({ onLoginSuccess, logoutReason }) {
         <div className="glass-panel p-5 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden border border-zinc-900">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-red-600 via-rose-600 to-cyan-500" />
           
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-white">Sign In</h3>
+          <div className="mb-6 text-center">
+            <h3 className="text-lg font-bold text-white tracking-wide">Sign In</h3>
           </div>
 
           {error && (
