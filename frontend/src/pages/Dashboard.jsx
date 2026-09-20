@@ -189,10 +189,10 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
       {/* Quick Action buttons panel */}
       <div className="glass-panel p-6 rounded-2xl border border-zinc-900 space-y-4">
         <h3 className="text-xs font-black text-white uppercase tracking-wider">Quick Actions Console</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
           <button
             onClick={() => setPage('add-member')}
-            className="flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group"
+            className="flex-1 flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group"
           >
             <Plus className="w-6 h-6 text-red-500 mb-2 group-hover:scale-110 transition-transform" />
             <span className="text-xs font-semibold text-white">Add Member</span>
@@ -209,7 +209,7 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
                 setPage('members');
               }
             }}
-            className="flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group"
+            className="flex-1 flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group"
           >
             <IndianRupee className="w-6 h-6 text-red-500 mb-2 group-hover:scale-110 transition-transform" />
             <span className="text-xs font-semibold text-white">Renew Membership</span>
@@ -217,7 +217,7 @@ export default function Dashboard({ members, payments, setPage, onRenewMember })
 
           <button
             onClick={handleTriggerReminders}
-            className="flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group relative overflow-hidden"
+            className="flex-1 flex flex-col items-center justify-center p-4 bg-zinc-950/80 border border-zinc-900 rounded-xl hover:border-red-500/40 hover:bg-zinc-900/50 transition-all cursor-pointer group relative overflow-hidden"
           >
             <Send className="w-6 h-6 text-red-500 mb-2 group-hover:scale-110 transition-transform" />
             <span className="text-xs font-semibold text-white">Send Reminders</span>

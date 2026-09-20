@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Save, Plus, Trash2, Shield, Clock, ShieldCheck } from 'lucide-react';
+import { Save, Plus, Trash2 } from 'lucide-react';
 import { getSettings, saveSettings } from '../db/mockDb';
 import phoenixLogo from '../assets/phoenix_logo.png';
 
@@ -198,26 +198,13 @@ export default function Settings({ onSettingsUpdate }) {
               <h3 className="text-sm font-black text-white uppercase tracking-wider">Phoenix Fitness Academy</h3>
               <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider">Administration Console</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Official branding & telemetry console. Membership rules and custom fee structures synchronize directly with cloud storage.
-            </p>
-
-            <div className="p-3 bg-zinc-950/70 border border-zinc-800/80 rounded-xl text-left space-y-1.5 text-[10px]">
-              <div className="flex items-center gap-1.5 text-zinc-300 font-bold">
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
-                <span>Session Security</span>
-              </div>
-              <p className="text-zinc-400 leading-normal">
-                Automatic logout enforces after <strong>20 minutes</strong> of inactivity for data safety.
-              </p>
-            </div>
             
             <button
               onClick={handleSaveAll}
-              className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer mt-4"
+              className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white text-xs font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer mt-2"
             >
               <Save className="w-4 h-4" />
-              Save Settings
+              <span>Save Settings</span>
             </button>
           </div>
         </div>
