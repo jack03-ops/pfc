@@ -74,6 +74,11 @@ export default function App() {
           count++;
         }
       }
+      if (m.membershipType === 'New') {
+        if (!clearedNotificationIds.includes(`new-${m.id}`)) {
+          count++;
+        }
+      }
     });
     return count;
   }, [members, clearedNotificationIds]);

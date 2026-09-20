@@ -45,6 +45,21 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Quick Notification Bell on Mobile Header */}
+          <button
+            onClick={() => handleNavClick('notifications')}
+            className="relative p-2 text-zinc-300 hover:text-white bg-zinc-900 rounded-xl border border-zinc-800 cursor-pointer"
+            aria-label="Notifications"
+            title="Notification Center"
+          >
+            <Bell className="w-4 h-4 text-zinc-300" />
+            {alertsCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] bg-red-600 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 border border-zinc-950 shadow-md animate-pulse">
+                {alertsCount > 99 ? '99+' : alertsCount}
+              </span>
+            )}
+          </button>
+
           {/* Quick Add Member button on Mobile header */}
           <button
             onClick={() => handleNavClick('add-member')}
