@@ -22,7 +22,7 @@ export default function Login({ onLoginSuccess, logoutReason }) {
       if (isOfficialAdmin || isDemoAdmin) {
         onLoginSuccess({ email: email.trim(), name: 'Phoenix Gym Admin', role: 'admin' });
       } else {
-        setError('Invalid Administrator credentials. Please check your Administrator email and password.');
+        setError('Invalid credentials. Please check your email and password.');
         setLoading(false);
       }
     }, 500);
@@ -41,7 +41,6 @@ export default function Login({ onLoginSuccess, logoutReason }) {
             <img src={phoenixLogo} alt="Phoenix Logo" className="w-16 h-16 object-contain animate-pulse" />
           </div>
           <h2 className="text-3xl font-extrabold text-white tracking-tight">Phoenix Fitness Academy</h2>
-          <p className="text-zinc-400 text-sm mt-1">Management Portal & Telemetry Console</p>
         </div>
 
         {/* Inactivity Logout Alert (if triggered) */}
@@ -59,9 +58,8 @@ export default function Login({ onLoginSuccess, logoutReason }) {
         <div className="glass-panel p-5 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden border border-zinc-900">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-red-600 via-rose-600 to-cyan-500" />
           
-          <div className="mb-5">
-            <h3 className="text-base font-bold text-white">Administrator Sign In</h3>
-            <p className="text-[11px] text-zinc-400 mt-0.5">Enter admin credentials to manage gym operations</p>
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-white">Sign In</h3>
           </div>
 
           {error && (
@@ -74,7 +72,7 @@ export default function Login({ onLoginSuccess, logoutReason }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
-                Admin Email
+                Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
@@ -91,7 +89,7 @@ export default function Login({ onLoginSuccess, logoutReason }) {
 
             <div>
               <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
-                Admin Security Password
+                Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
@@ -116,7 +114,7 @@ export default function Login({ onLoginSuccess, logoutReason }) {
               ) : (
                 <>
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Access Admin Console</span>
+                  <span>Sign In</span>
                 </>
               )}
             </button>
