@@ -150,9 +150,9 @@ export default function Sidebar({ currentPage, setCurrentPage, onLogout, alertsC
               setMobileOpen(false);
               onLogout();
             }}
-            className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 cursor-pointer font-semibold text-xs border border-red-500/20"
+            className="w-full flex items-center justify-center gap-3.5 px-4 py-5 rounded-2xl text-red-400 hover:bg-red-500/15 hover:text-red-200 hover:border-red-500/40 transition-all duration-200 cursor-pointer font-bold text-base border-2 border-red-500/30 shadow-lg shadow-red-950/20 active:scale-[0.98]"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-6 h-6" />
             <span>Sign Out</span>
           </button>
         </div>
